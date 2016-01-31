@@ -1,9 +1,22 @@
-*.iml
-*.apk
 .gradle
-/local.properties
+.DS_Store
+
+# built application files
+*.apk
+*.ap_
+
+# Java class files
+*.class
+
+# idea project files
+/.idea/.name
 /.idea/workspace.xml
 /.idea/libraries
-.DS_Store
+*.iml
+*.ipr
+*.iws
+
+# gradle
+.gradle
+/local.properties
 /build
-/captures
