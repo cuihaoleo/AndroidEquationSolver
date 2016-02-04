@@ -5,19 +5,27 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView textViewEquation;
-    ListView listViewVariables;
+    ListView listIDs;
     ArrayAdapter<String> adapterVariables;
     ArrayList<String> listVariables = new ArrayList<String>();
 
+    private static final List<Character> VARIALBE_CHARS = Arrays.asList('x', 'y', 'z');
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
     @Override
@@ -26,11 +34,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textViewEquation = (TextView)findViewById(R.id.textViewEquation);
-        listViewVariables = (ListView)findViewById(R.id.listViewVariables);
+        listIDs = (ListView)findViewById(R.id.listViewVariables);
 
         adapterVariables = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, listVariables);
-        listViewVariables.setAdapter(adapterVariables);
+                R.layout.list_view_variables, listVariables);
+        listIDs.setAdapter(adapterVariables);
+        listIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Toast.makeText(MainActivity.this, "hello", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         textViewEquation.addTextChangedListener(new TextWatcher() {
             @Override
@@ -65,13 +80,33 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     textViewEquation.setBackgroundResource(android.R.color.transparent);
 
+                    HashSet<Character> ids = new HashSet<>();
+                    char var = '\0';
+
+                    for (Character c: left.getProperty().Variables) { ids.add(c); }
+                    for (Character c: right.getProperty().Variables) { ids.add(c); }
+
+                    for (Character c: VARIALBE_CHARS) {
+                        if (ids.contains(c)) {
+                            var = c;
+                            ids.remove(c);
+                            break;
+                        }
+                    }
+
+                    ArrayList<Character> idlist = new ArrayList<>(ids);
+                    Collections.sort(idlist);
+                    if (var == '\0') {
+                        var = idlist.get(0);
+                        idlist.remove(0);
+                    }
+
                     listVariables.clear();
-                    for (Character c: left.getProperty().Variables) {
-                        listVariables.add(c.toString());
+                    listVariables.add("Variable " + var);
+                    for (Character id: idlist) {
+                        listVariables.add("Constant " + id);
                     }
-                    for (Character c: right.getProperty().Variables) {
-                        listVariables.add(c.toString());
-                    }
+                    //listVariables = new ArrayList<String>(ids);
 
                     adapterVariables.notifyDataSetChanged();
 

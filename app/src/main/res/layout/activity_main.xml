@@ -32,7 +32,8 @@
             android:layout_alignTop="@+id/textView"
             android:layout_toRightOf="@+id/textView"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentEnd="true"
+            android:singleLine="true" />
     </LinearLayout>
 
     <LinearLayout
@@ -48,14 +49,8 @@
         android:weightSum="1"
         android:layout_below="@+id/linearLayout2">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No variable found"
-            android:id="@+id/textView2" />
-
         <ListView
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:id="@+id/listViewVariables"
             android:layout_below="@+id/linearLayout"
@@ -64,7 +59,8 @@
             android:layout_above="@+id/button"
             android:layout_alignRight="@+id/button"
             android:layout_alignEnd="@+id/button"
-            android:layout_weight="1.44" />
+            android:layout_weight="1.44"
+            android:choiceMode="singleChoice" />
 
         <LinearLayout
             android:orientation="horizontal"
