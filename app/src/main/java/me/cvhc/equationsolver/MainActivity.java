@@ -1,5 +1,7 @@
 package me.cvhc.equationsolver;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,9 +23,12 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     TextView textViewEquation;
-    ListView listIDs;
+    ListView listViewIDs;
     ArrayAdapter<String> adapterVariables;
+
     ArrayList<String> listVariables = new ArrayList<String>();
+    ArrayList<Character> listIDs = new ArrayList<>();
+    Character variable = '\0';
 
     private static final List<Character> VARIALBE_CHARS = Arrays.asList('x', 'y', 'z');
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -33,30 +38,60 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textViewEquation = (TextView)findViewById(R.id.textViewEquation);
-        listIDs = (ListView)findViewById(R.id.listViewVariables);
+        textViewEquation = (TextView) findViewById(R.id.textViewEquation);
+        listViewIDs = (ListView) findViewById(R.id.listViewVariables);
 
         adapterVariables = new ArrayAdapter<String>(this,
                 R.layout.list_view_variables, listVariables);
-        listIDs.setAdapter(adapterVariables);
-        listIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listViewIDs.setAdapter(adapterVariables);
+        listViewIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Toast.makeText(MainActivity.this, "hello", Toast.LENGTH_SHORT).show();
+
+                if (position == 0) {
+                    AlertDialog.Builder selector = new AlertDialog.Builder(MainActivity.this);
+
+                    ArrayList<String> items = new ArrayList<>();
+                    for (char c : listIDs) {
+                        items.add(c + " as variable");
+                    }
+
+                    String[] arr = items.toArray(new String[items.size()]);
+                    selector.setSingleChoiceItems(arr, listIDs.indexOf(variable), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int position) {
+                            Character selection = listIDs.get(position);
+
+                            if (selection != variable) {
+                                variable = selection;
+                                onChangeVariable(variable);
+                            }
+
+                            Log.d(LOG_TAG, "User chose " + selection + " as variable");
+                            dialog.dismiss();
+                        }
+
+                    });
+
+                    selector.setTitle("Variable of the equation");
+                    selector.show();
+                }
+                else {
+                    int id_index = position - 1;
+                    char id = listIDs.get(id_index);
+                    // TODO: Implement ID assignment
+                }
             }
         });
 
         textViewEquation.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -76,42 +111,40 @@ public class MainActivity extends AppCompatActivity {
 
                 if (left.isError() || right.isError()) {
                     textViewEquation.setBackgroundResource(R.color.red);
-                }
-                else {
+                } else {
                     textViewEquation.setBackgroundResource(android.R.color.transparent);
 
-                    HashSet<Character> ids = new HashSet<>();
-                    char var = '\0';
+                    HashSet<Character> ids = new HashSet<>(left.getProperty().Variables);
+                    ids.addAll(right.getProperty().Variables);
 
-                    for (Character c: left.getProperty().Variables) { ids.add(c); }
-                    for (Character c: right.getProperty().Variables) { ids.add(c); }
+                    if (ids.isEmpty()) { ids.add(VARIALBE_CHARS.get(0)); }
 
-                    for (Character c: VARIALBE_CHARS) {
+                    for (Character c : VARIALBE_CHARS) {
                         if (ids.contains(c)) {
-                            var = c;
-                            ids.remove(c);
+                            variable = c;
                             break;
                         }
                     }
 
-                    ArrayList<Character> idlist = new ArrayList<>(ids);
-                    Collections.sort(idlist);
-                    if (var == '\0') {
-                        var = idlist.get(0);
-                        idlist.remove(0);
-                    }
-
-                    listVariables.clear();
-                    listVariables.add("Variable " + var);
-                    for (Character id: idlist) {
-                        listVariables.add("Constant " + id);
-                    }
-                    //listVariables = new ArrayList<String>(ids);
-
-                    adapterVariables.notifyDataSetChanged();
+                    listIDs = new ArrayList<>(ids);
+                    Collections.sort(listIDs);
+                    if (variable == '\0') { variable = listIDs.get(0); }
+                    onChangeVariable(variable);
 
                 }
             }
         });
+    }
+
+    protected void onChangeVariable(char variable) {
+        listVariables.clear();
+        listVariables.add("Variable " + variable);
+
+        for (Character id: listIDs) {
+            if (id != variable)
+                listVariables.add("Constant " + id);
+        }
+
+        adapterVariables.notifyDataSetChanged();
     }
 }
