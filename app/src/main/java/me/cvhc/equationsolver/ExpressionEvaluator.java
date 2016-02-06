@@ -24,6 +24,7 @@ public class ExpressionEvaluator {
         public boolean Determined = false;
     }
 
+    private String Expression;
     private ExpressionVisitorImpl Evaluator;
     private ParseTree ASTree;
     private boolean ErrorFlag = false;
@@ -36,6 +37,7 @@ public class ExpressionEvaluator {
         ExpressionLexer lexer = new ExpressionLexer(new ANTLRInputStream(exp));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ExpressionParser parser = new ExpressionParser(tokens);
+        Expression = new String(exp);
 
         parser.removeErrorListeners();
         parser.addErrorListener(new BaseErrorListener() {
@@ -54,6 +56,11 @@ public class ExpressionEvaluator {
             Evaluator = new ExpressionVisitorImpl();
             Property = Evaluator.visit(ASTree);
         }
+    }
+
+    @Override
+    public String toString() {
+        return Expression;
     }
 
     public boolean isError() {
