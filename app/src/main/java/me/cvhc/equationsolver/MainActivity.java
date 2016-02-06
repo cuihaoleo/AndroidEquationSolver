@@ -2,14 +2,17 @@ package me.cvhc.equationsolver;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +20,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -29,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> listVariables = new ArrayList<String>();
     ArrayList<Character> listIDs = new ArrayList<>();
     Character variable = '\0';
+
+    HashMap<Character, Double> dictConstant = new HashMap<>();
 
     private static final List<Character> VARIALBE_CHARS = Arrays.asList('x', 'y', 'z');
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -77,21 +83,47 @@ public class MainActivity extends AppCompatActivity {
 
                     selector.setTitle("Variable of the equation");
                     selector.show();
-                }
-                else {
+                } else {
                     int id_index = position - 1;
-                    char id = listIDs.get(id_index);
-                    // TODO: Implement ID assignment
+                    final char id = listIDs.get(id_index);
+
+                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                    alert.setTitle("Setting ID");
+                    final EditText input = new EditText(MainActivity.this);
+                    input.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    input.setRawInputType(Configuration.KEYBOARD_12KEY);
+                    alert.setView(input);
+
+                    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int n) {
+                            Double number = 0.0;
+                            //Put actions for OK button here
+                            try {
+                                number = Double.parseDouble(input.getText().toString());
+                            } catch (NumberFormatException e) {
+                                dialog.dismiss();
+                            }
+
+                            dictConstant.put(id, number);
+                            onSettingConstant(id);
+                            Log.d(LOG_TAG, "Setting " + id + " to " + number);
+                        }
+                    });
+
+                    alert.setNegativeButton("Cancel", null);
+                    alert.show();
                 }
             }
         });
 
         textViewEquation.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -117,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
                     HashSet<Character> ids = new HashSet<>(left.getProperty().Variables);
                     ids.addAll(right.getProperty().Variables);
 
-                    if (ids.isEmpty()) { ids.add(VARIALBE_CHARS.get(0)); }
+                    if (ids.isEmpty()) {
+                        ids.add(VARIALBE_CHARS.get(0));
+                    }
 
                     for (Character c : VARIALBE_CHARS) {
                         if (ids.contains(c)) {
@@ -128,7 +162,9 @@ public class MainActivity extends AppCompatActivity {
 
                     listIDs = new ArrayList<>(ids);
                     Collections.sort(listIDs);
-                    if (variable == '\0') { variable = listIDs.get(0); }
+                    if (variable == '\0') {
+                        variable = listIDs.get(0);
+                    }
                     onChangeVariable(variable);
 
                 }
@@ -141,8 +177,30 @@ public class MainActivity extends AppCompatActivity {
         listVariables.add("Variable " + variable);
 
         for (Character id: listIDs) {
-            if (id != variable)
-                listVariables.add("Constant " + id);
+            if (id != variable) {
+                String s = "Constant " + id;
+                if (dictConstant.containsKey(id)) {
+                    s += " = " + dictConstant.get(id);
+                }
+                listVariables.add(s);
+            }
+        }
+
+        adapterVariables.notifyDataSetChanged();
+    }
+
+    protected void onSettingConstant(char constant) {
+        listVariables.clear();
+        listVariables.add("Variable " + variable);
+
+        for (Character id: listIDs) {
+            if (id != variable) {
+                String s = "Constant " + id;
+                if (dictConstant.containsKey(id)) {
+                    s += " = " + dictConstant.get(id);
+                }
+                listVariables.add(s);
+            }
         }
 
         adapterVariables.notifyDataSetChanged();
