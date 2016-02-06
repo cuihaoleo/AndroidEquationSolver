@@ -32,11 +32,14 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<String> listVariables = new ArrayList<String>();
     ArrayList<Character> listIDs = new ArrayList<>();
+
     Character variable = '\0';
 
-    HashMap<Character, Double> dictConstant = new HashMap<>();
+    static final Character LEFT_ID = '\0';
+    static final Character RIGHT_ID = '\1';
+    HashMap<Character, ExpressionEvaluator> dictIDs = new HashMap<>();
 
-    private static final List<Character> VARIALBE_CHARS = Arrays.asList('x', 'y', 'z');
+    private static final List<Character> VARIABLE_CHARS = Arrays.asList('x', 'y', 'z');
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
     @Override
@@ -54,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                Toast.makeText(MainActivity.this, "hello", Toast.LENGTH_SHORT).show();
-
                 if (position == 0) {
                     AlertDialog.Builder selector = new AlertDialog.Builder(MainActivity.this);
 
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
                             if (selection != variable) {
                                 variable = selection;
-                                onChangeVariable(variable);
+                                onSettingID(variable);
                             }
 
                             Log.d(LOG_TAG, "User chose " + selection + " as variable");
@@ -84,29 +85,31 @@ public class MainActivity extends AppCompatActivity {
                     selector.setTitle("Variable of the equation");
                     selector.show();
                 } else {
-                    int id_index = position - 1;
-                    final char id = listIDs.get(id_index);
+                    final char id = listIDs.get(position);
 
                     AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                     alert.setTitle("Setting ID");
+
                     final EditText input = new EditText(MainActivity.this);
-                    input.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                    input.setRawInputType(Configuration.KEYBOARD_12KEY);
+                    if (dictIDs.containsKey(id)) {
+                        input.setText(dictIDs.get(id).toString());
+                    }
+                    input.setSingleLine(true);
+
                     alert.setView(input);
 
                     alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int n) {
-                            Double number = 0.0;
-                            //Put actions for OK button here
-                            try {
-                                number = Double.parseDouble(input.getText().toString());
-                            } catch (NumberFormatException e) {
+                            ExpressionEvaluator eval;
+
+                            eval = new ExpressionEvaluator(input.getText().toString());
+                            if (eval.isError()) {
                                 dialog.dismiss();
                             }
 
-                            dictConstant.put(id, number);
-                            onSettingConstant(id);
-                            Log.d(LOG_TAG, "Setting " + id + " to " + number);
+                            dictIDs.put(id, eval);
+                            onSettingID(id);
+                            Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
                         }
                     });
 
@@ -150,54 +153,44 @@ public class MainActivity extends AppCompatActivity {
                     ids.addAll(right.getProperty().Variables);
 
                     if (ids.isEmpty()) {
-                        ids.add(VARIALBE_CHARS.get(0));
+                        ids.add(VARIABLE_CHARS.get(0));
                     }
 
-                    for (Character c : VARIALBE_CHARS) {
+                    for (Character c : VARIABLE_CHARS) {
                         if (ids.contains(c)) {
                             variable = c;
                             break;
                         }
                     }
 
+                    dictIDs.put(LEFT_ID, left);
+                    dictIDs.put(RIGHT_ID, right);
+
                     listIDs = new ArrayList<>(ids);
                     Collections.sort(listIDs);
+
                     if (variable == '\0') {
                         variable = listIDs.get(0);
                     }
-                    onChangeVariable(variable);
 
+                    listIDs.remove(variable);
+                    listIDs.add(0, variable);
+
+                    onSettingID(variable);
                 }
             }
         });
     }
 
-    protected void onChangeVariable(char variable) {
+    protected void onSettingID(char set_id) {
         listVariables.clear();
         listVariables.add("Variable " + variable);
 
         for (Character id: listIDs) {
             if (id != variable) {
                 String s = "Constant " + id;
-                if (dictConstant.containsKey(id)) {
-                    s += " = " + dictConstant.get(id);
-                }
-                listVariables.add(s);
-            }
-        }
-
-        adapterVariables.notifyDataSetChanged();
-    }
-
-    protected void onSettingConstant(char constant) {
-        listVariables.clear();
-        listVariables.add("Variable " + variable);
-
-        for (Character id: listIDs) {
-            if (id != variable) {
-                String s = "Constant " + id;
-                if (dictConstant.containsKey(id)) {
-                    s += " = " + dictConstant.get(id);
+                if (dictIDs.containsKey(id)) {
+                    s += " = " + dictIDs.get(id);
                 }
                 listVariables.add(s);
             }
