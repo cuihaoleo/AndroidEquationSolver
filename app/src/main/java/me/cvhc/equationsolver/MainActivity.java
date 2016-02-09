@@ -3,11 +3,9 @@ package me.cvhc.equationsolver;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +15,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +50,10 @@ public class MainActivity extends AppCompatActivity {
         buttonPlot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, PlotActivity.class));
+                Intent intent = new Intent(MainActivity.this, PlotActivity.class);
+                //intent.putExtra("new_variable_name","value");
+                //startActivity(new Intent(MainActivity.this, PlotActivity.class));
+                startActivityForResult(intent, 0);
             }
         });
 
@@ -208,5 +208,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         adapterVariables.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (resultCode == RESULT_OK) {
+            double lower = data.getDoubleExtra("LOWER_BOUND", 0.0);
+            double upper = data.getDoubleExtra("UPPER_BOUND", 0.0);
+            Log.d(LOG_TAG, "Lower bound: " + lower);
+            Log.d(LOG_TAG, "Upper bound: " + upper);
+        }
     }
 }

@@ -1,13 +1,15 @@
 package me.cvhc.equationsolver;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.view.View.OnTouchListener;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
@@ -17,8 +19,11 @@ import com.androidplot.xy.XYPlot;
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private static final int SERIES_SIZE = 200;
+
+    private TextView textUpperBound, textLowerBound;
+    private Button buttonApply, buttonCancel;
     private XYPlot plot;
-    private Button resetButton;
+
     private Evaluator2SeriesWrapper mainSeries = null;
     private PointF minXY;
     private PointF maxXY;
@@ -27,7 +32,32 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
 
-        plot = (XYPlot) findViewById(R.id.plot);
+        textUpperBound = (TextView)findViewById(R.id.textUpperBound);
+        textLowerBound = (TextView)findViewById(R.id.textLowerBound);
+        buttonApply = (Button)findViewById(R.id.buttonApply);
+        buttonCancel = (Button)findViewById(R.id.buttonCancel);
+
+        buttonApply.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("LOWER_BOUND", minX);
+                resultIntent.putExtra("UPPER_BOUND", maxX);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }
+        });
+
+        buttonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent resultIntent = new Intent();
+                setResult(RESULT_CANCELED, resultIntent);
+                finish();
+            }
+        });
+
+        plot = (XYPlot)findViewById(R.id.plot);
         plot.setOnTouchListener(this);
 
         plot.getGraphWidget().setTicksPerRangeLabel(2);
@@ -46,10 +76,13 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         plot.calculateMinMaxVals();
+
         minX = plot.getCalculatedMinX().doubleValue();
         maxX = plot.getCalculatedMaxX().doubleValue();
 
         plot.setUserRangeOrigin(0);
+        textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
+        textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
 
         plot.redraw();
 
@@ -94,6 +127,10 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     distBetweenFingers = spacing(event);
                     zoom(oldDist / distBetweenFingers);
                 }
+
+                textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
+                textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
+
                 plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
                 plot.redraw();
                 break;
