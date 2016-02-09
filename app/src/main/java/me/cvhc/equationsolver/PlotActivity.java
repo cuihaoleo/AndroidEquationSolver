@@ -24,7 +24,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private Button buttonApply, buttonCancel;
     private XYPlot plot;
 
-    private Evaluator2SeriesWrapper mainSeries = null;
+    private FunctionWrapper mainSeries = null;
     private double minX;
     private double maxX;
 
@@ -78,7 +78,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.getLegendWidget().setVisible(false);
         plot.getTitleWidget().setVisible(false);
 
-        mainSeries = new Evaluator2SeriesWrapper(new Evaluator2SeriesWrapper.MathFunction() {
+        mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
                 left.setVariable(variable, x);

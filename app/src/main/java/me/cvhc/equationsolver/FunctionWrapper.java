@@ -2,7 +2,7 @@ package me.cvhc.equationsolver;
 
 import com.androidplot.xy.XYSeries;
 
-public class Evaluator2SeriesWrapper implements XYSeries {
+public class FunctionWrapper implements XYSeries {
     public interface MathFunction {
         double call(double x);
     }
@@ -12,7 +12,7 @@ public class Evaluator2SeriesWrapper implements XYSeries {
     double upperBound = 0, lowerBound = 0;
     double step = 0;
 
-    public Evaluator2SeriesWrapper(MathFunction f, int size) {
+    public FunctionWrapper(MathFunction f, int size) {
         function = f;
         seriesSize = size;
     }
