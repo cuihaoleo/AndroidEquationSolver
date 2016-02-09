@@ -9,22 +9,129 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="me.cvhc.equationsolver.PlotActivity">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
+    <com.androidplot.xy.XYPlot
+        style="@style/simple_xy"
+        android:id="@+id/plot"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_above="@+id/relativeLayout2" />
 
-        <me.cvhc.equationsolver.ExtendedXYPlotZoomPan
-            style="@style/simple_xy"
-            android:id="@+id/plot"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            androidPlot.title="ScrollZoom Example"
-            android:layout_weight="1"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/relativeLayout2">
 
-        <Button android:id="@+id/resetButton"
-            android:layout_width="fill_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reset"/>
-    </LinearLayout>
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Lower"
+            android:id="@+id/labelLower"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:paddingLeft="4dp"
+            android:paddingTop="2dp"
+            android:paddingRight="4dp"
+            android:paddingBottom="2dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Upper"
+            android:id="@+id/labelUpper"
+            android:layout_below="@+id/labelLower"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignRight="@+id/labelLower"
+            android:layout_alignEnd="@+id/labelLower"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:paddingRight="4dp"
+            android:paddingLeft="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="1.0000"
+            android:id="@+id/textUpperBound"
+            android:gravity="center_vertical"
+            android:textStyle="bold"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/labelLower"
+            android:layout_toEndOf="@+id/labelLower"
+            android:layout_above="@+id/labelUpper"
+            android:editable="false" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="3.1415"
+            android:id="@+id/textLowerBound"
+            android:gravity="center_vertical"
+            android:textStyle="bold"
+            android:layout_below="@+id/textUpperBound"
+            android:layout_toEndOf="@+id/labelUpper"
+            android:layout_toRightOf="@+id/labelUpper"
+            android:layout_alignBottom="@+id/labelUpper"
+            android:editable="false" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log scale"
+            android:id="@+id/checkLogScale"
+            android:checked="false"
+            android:layout_alignBottom="@+id/linearLayout3"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X axis"
+            android:id="@+id/checkShowXAxis"
+            android:checked="false"
+            android:layout_alignTop="@+id/checkLogScale"
+            android:layout_toRightOf="@+id/checkLogScale"
+            android:layout_toEndOf="@+id/checkLogScale" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:id="@+id/linearLayout3"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true">
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Apply"
+                android:id="@+id/buttonApply"
+                android:layout_below="@+id/buttonCancel"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:id="@+id/buttonCancel"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
+        </LinearLayout>
+    </RelativeLayout>
+
 </RelativeLayout>

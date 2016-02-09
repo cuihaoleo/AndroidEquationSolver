@@ -43,7 +43,7 @@ public class Evaluator2SeriesWrapper implements XYSeries {
 
     @Override
     public Number getY(int index) {
-        return function.call(lowerBound + step * index);
+        return function.call(getX(index).doubleValue());
     }
 
     @Override
