@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
 
     Character variable = '\0';
 
-    static final Character LEFT_ID = '\0';
-    static final Character RIGHT_ID = '\1';
+    public static final Character LEFT_ID = '\0';
+    public static final Character RIGHT_ID = '\1';
     HashMap<Character, ExpressionEvaluator> dictIDs = new HashMap<>();
 
     private static final List<Character> VARIABLE_CHARS = Arrays.asList('x', 'y', 'z');
@@ -51,12 +53,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, PlotActivity.class);
+                HashMap<Character, Double> constValues = resolveIDs();
+
+                if (constValues == null) {
+                    // TODO: give some error message
+                    return;
+                }
+
+                intent.putExtra("LEFT_PART", dictIDs.get(LEFT_ID).toString());
+                intent.putExtra("RIGHT_PART", dictIDs.get(RIGHT_ID).toString());
+                intent.putExtra("CONSTANT_VALUES", constValues);
+                intent.putExtra("VARIABLE", variable);
+
                 //intent.putExtra("new_variable_name","value");
                 //startActivity(new Intent(MainActivity.this, PlotActivity.class));
                 startActivityForResult(intent, 0);
             }
         });
-
 
         textViewEquation = (TextView) findViewById(R.id.textViewEquation);
         listViewIDs = (ListView) findViewById(R.id.listViewVariables);
@@ -115,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
                             eval = new ExpressionEvaluator(input.getText().toString());
                             if (eval.isError()) {
-                                dialog.dismiss();
+                                dialog.dismiss();  // TODO: give some error message
                             }
 
                             dictIDs.put(id, eval);
@@ -167,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
                         ids.add(VARIABLE_CHARS.get(0));
                     }
 
+                    variable = '\0';
                     for (Character c : VARIABLE_CHARS) {
                         if (ids.contains(c)) {
                             variable = c;
@@ -177,15 +191,11 @@ public class MainActivity extends AppCompatActivity {
                     dictIDs.put(LEFT_ID, left);
                     dictIDs.put(RIGHT_ID, right);
 
-                    listIDs = new ArrayList<>(ids);
-                    Collections.sort(listIDs);
-
                     if (variable == '\0') {
-                        variable = listIDs.get(0);
+                        ArrayList<Character> t = new ArrayList<>(ids);
+                        Collections.sort(t);
+                        variable = t.get(0);
                     }
-
-                    listIDs.remove(variable);
-                    listIDs.add(0, variable);
 
                     onSettingID(variable);
                 }
@@ -193,9 +203,67 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private HashMap<Character, Double> resolveIDs() {
+        HashMap<Character, Double> ret = new HashMap<>();
+        ret.put(variable, null);
+
+        for (Character id : listIDs) {
+            if (dictIDs.containsKey(id)) {
+                dictIDs.get(id).resetVariables();
+            }
+        }
+
+        while (!ret.keySet().containsAll(listIDs)) {
+            boolean flag = false;
+
+            for (final Character id : listIDs) {
+                ExpressionEvaluator eval = dictIDs.get(id);
+
+                if (id != variable && eval == null) {
+                    return null;
+                }
+
+                if (!ret.containsKey(id) && eval.getProperty().Determined) {
+                    final double val = eval.getValue();
+                    ret.put(id, val);
+                    flag = true;
+
+                    for (final Character sid : listIDs) {
+                        if (sid != id && dictIDs.containsKey(sid)) {
+                            ExpressionEvaluator e = dictIDs.get(sid);
+                            e.updateVariables(new HashMap<Character, Double>() {{
+                                put(id, val);
+                            }});
+                        }
+                    }
+                }
+            }
+
+            if (!flag) { return null; }
+        }
+
+        ret.remove(variable);
+        return ret;
+    }
+
     protected void onSettingID(char set_id) {
         listVariables.clear();
         listVariables.add("Variable " + variable);
+
+        HashSet<Character> t = new HashSet<>();
+        t.addAll(dictIDs.get(LEFT_ID).getProperty().Variables);
+        t.addAll(dictIDs.get(RIGHT_ID).getProperty().Variables);
+        for (Character id: new ArrayList<Character>(listIDs)) {
+            if (dictIDs.containsKey(id)) {
+                t.addAll(dictIDs.get(id).getProperty().Variables);
+            }
+        }
+
+        t.remove(variable);
+        listIDs.clear();
+        listIDs.addAll(t);
+        Collections.sort(listIDs);
+        listIDs.add(0, variable);
 
         for (Character id: listIDs) {
             if (id != variable) {

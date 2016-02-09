@@ -15,6 +15,8 @@ import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlot;
 
+import java.util.HashMap;
+
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
@@ -31,6 +33,18 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
+
+        Intent intent = getIntent();
+
+        String leftPart = intent.getStringExtra("LEFT_PART");
+        String rightPart = intent.getStringExtra("RIGHT_PART");
+        final ExpressionEvaluator left = new ExpressionEvaluator(leftPart);
+        final ExpressionEvaluator right = new ExpressionEvaluator(rightPart);
+        final Character variable = intent.getCharExtra("VARIABLE", 'x');
+
+        HashMap<Character, Double> constValues = (HashMap<Character, Double>)intent.getSerializableExtra("CONSTANT_VALUES");
+        left.updateVariables(constValues);
+        right.updateVariables(constValues);
 
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
@@ -69,10 +83,12 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         mainSeries = new Evaluator2SeriesWrapper(new Evaluator2SeriesWrapper.MathFunction() {
             @Override
             public double call(double x) {
-                return Math.sin(x);
+                left.setVariable(variable, x);
+                right.setVariable(variable, x);
+                return left.getValue() - right.getValue();
             }
-        }, 500);
-        mainSeries.setBound(0.0, 8 * Math.PI);
+        }, 200);
+        mainSeries.setBound(-1.0, 1.0);
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         plot.calculateMinMaxVals();

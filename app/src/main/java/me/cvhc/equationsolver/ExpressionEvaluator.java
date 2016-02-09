@@ -75,6 +75,12 @@ public class ExpressionEvaluator {
         return Property.Determined ? Property.Value : null;
     }
 
+    public void setVariable(Character id, Double val) {
+        CachedVariables.remove(id);
+        VariableList.put(id, val);
+        Property = Evaluator.visit(ASTree);
+    }
+
     public void updateVariables(Map<Character, Double> vars) {
         for (Character key: CachedVariables) {
             if (vars.containsKey(key) && VariableList.containsKey(key) &&
@@ -84,6 +90,12 @@ public class ExpressionEvaluator {
         }
 
         VariableList = new HashMap<>(vars);
+        Property = Evaluator.visit(ASTree);
+    }
+
+    public void resetVariables() {
+        CachedVariables.clear();
+        VariableList.clear();
         Property = Evaluator.visit(ASTree);
     }
 
