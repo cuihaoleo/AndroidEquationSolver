@@ -22,8 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listViewIDs;
     ArrayAdapter<String> adapterVariables;
 
-    ArrayList<String> listVariables = new ArrayList<String>();
+    ArrayList<String> listVariables = new ArrayList<>();
     ArrayList<Character> listIDs = new ArrayList<>();
 
     Character variable = '\0';
@@ -65,8 +64,6 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("CONSTANT_VALUES", constValues);
                 intent.putExtra("VARIABLE", variable);
 
-                //intent.putExtra("new_variable_name","value");
-                //startActivity(new Intent(MainActivity.this, PlotActivity.class));
                 startActivityForResult(intent, 0);
             }
         });
@@ -74,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
         textViewEquation = (TextView) findViewById(R.id.textViewEquation);
         listViewIDs = (ListView) findViewById(R.id.listViewVariables);
 
-        adapterVariables = new ArrayAdapter<String>(this,
-                R.layout.list_view_variables, listVariables);
+        adapterVariables = new ArrayAdapter<>(this, R.layout.list_view_variables, listVariables);
         listViewIDs.setAdapter(adapterVariables);
         listViewIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -246,14 +242,14 @@ public class MainActivity extends AppCompatActivity {
         return ret;
     }
 
-    protected void onSettingID(char set_id) {
+    private void onSettingID(char set_id) {
         listVariables.clear();
         listVariables.add("Variable " + variable);
 
         HashSet<Character> t = new HashSet<>();
         t.addAll(dictIDs.get(LEFT_ID).getProperty().Variables);
         t.addAll(dictIDs.get(RIGHT_ID).getProperty().Variables);
-        for (Character id: new ArrayList<Character>(listIDs)) {
+        for (Character id: new ArrayList<>(listIDs)) {
             if (dictIDs.containsKey(id)) {
                 t.addAll(dictIDs.get(id).getProperty().Variables);
             }

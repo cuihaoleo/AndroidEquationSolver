@@ -18,8 +18,8 @@ public class Evaluator2SeriesWrapper implements XYSeries {
     }
 
     public void setBound(Double l, Double u) {
-        if (l != null) { lowerBound = l; };
-        if (u != null) { upperBound = u; };
+        if (l != null) { lowerBound = l; }
+        if (u != null) { upperBound = u; }
         step = (upperBound - lowerBound) / seriesSize;
     }
 

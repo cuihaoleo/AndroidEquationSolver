@@ -20,15 +20,13 @@ import java.util.HashMap;
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
-    private static final int SERIES_SIZE = 200;
-
     private TextView textUpperBound, textLowerBound;
     private Button buttonApply, buttonCancel;
     private XYPlot plot;
 
     private Evaluator2SeriesWrapper mainSeries = null;
-    private PointF minXY;
-    private PointF maxXY;
+    private double minX;
+    private double maxX;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,16 +102,13 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     }
 
-    private double minX;
-    private double maxX;
+    private static final int NONE = 0;
+    private static final int ONE_FINGER_DRAG = 1;
+    private static final int TWO_FINGERS_DRAG = 2;
+    private int mode = NONE;
 
-    static final int NONE = 0;
-    static final int ONE_FINGER_DRAG = 1;
-    static final int TWO_FINGERS_DRAG = 2;
-    int mode = NONE;
-
-    PointF firstFinger;
-    double distBetweenFingers;
+    private PointF firstFinger;
+    private double distBetweenFingers;
 
     @Override
     public boolean onTouch(View arg0, MotionEvent event) {
@@ -164,7 +159,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         minX = Math.min(minX, mainSeries.getX(mainSeries.size() - 1).doubleValue());
         maxX = Math.max(maxX, mainSeries.getX(0).doubleValue());
-        clampToDomainBounds(domainSpan);
+        mainSeries.setBound(minX, maxX);
     }
 
     private void scroll(double pan) {
@@ -174,18 +169,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         minX = minX + offset;
         maxX = maxX + offset;
-
-        clampToDomainBounds(domainSpan);
-    }
-
-    private void clampToDomainBounds(double domainSpan) {
-        double leftBoundary = mainSeries.getX(0).doubleValue();
-        double rightBoundary = mainSeries.getX(mainSeries.size() - 1).doubleValue();
-        Double newLower = null, newUpper = null;
-
-        if (minX < leftBoundary) { newLower = (double)minX; }
-        if (maxX > rightBoundary) { newUpper = (double)maxX; }
-
         mainSeries.setBound(minX, maxX);
     }
 

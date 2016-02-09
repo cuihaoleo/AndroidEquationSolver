@@ -1,21 +1,17 @@
 package me.cvhc.equationsolver;
 
-import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
 
 public class ExpressionEvaluator {
     public static class PropertyStruct {
@@ -37,7 +33,7 @@ public class ExpressionEvaluator {
         ExpressionLexer lexer = new ExpressionLexer(new ANTLRInputStream(exp));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ExpressionParser parser = new ExpressionParser(tokens);
-        Expression = new String(exp);
+        Expression = exp;
 
         parser.removeErrorListeners();
         parser.addErrorListener(new BaseErrorListener() {
