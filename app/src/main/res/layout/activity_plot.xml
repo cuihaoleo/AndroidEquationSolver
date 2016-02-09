@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.androidplot.xy.XYPlotZoomPan
+        <me.cvhc.equationsolver.ExtendedXYPlotZoomPan
             style="@style/simple_xy"
             android:id="@+id/plot"
             android:layout_width="fill_parent"

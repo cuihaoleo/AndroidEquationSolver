@@ -23,6 +23,14 @@ public class Evaluator2SeriesWrapper implements XYSeries {
         step = (upperBound - lowerBound) / seriesSize;
     }
 
+    public double getLowerBound() {
+        return lowerBound;
+    }
+
+    public double getUpperBound() {
+        return upperBound;
+    }
+
     @Override
     public int size() {
         return seriesSize;

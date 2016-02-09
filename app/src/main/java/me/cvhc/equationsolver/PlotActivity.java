@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlotZoomPan;
 
@@ -14,7 +15,7 @@ import com.androidplot.xy.XYPlotZoomPan;
 public class PlotActivity extends AppCompatActivity {
 
     private static final int SERIES_SIZE = 200;
-    private XYPlotZoomPan plot;
+    private ExtendedXYPlotZoomPan plot;
     private Button resetButton;
     private Evaluator2SeriesWrapper series = null;
     private PointF minXY;
@@ -30,11 +31,13 @@ public class PlotActivity extends AppCompatActivity {
                 //nothing
             }
         });
-        plot = (XYPlotZoomPan) findViewById(R.id.plot);
+        plot = (ExtendedXYPlotZoomPan) findViewById(R.id.plot);
         //mySimpleXYPlot.setOnTouchListener(this);
         plot.getGraphWidget().setTicksPerRangeLabel(2);
         plot.getGraphWidget().setTicksPerDomainLabel(2);
         plot.getGraphWidget().getBackgroundPaint().setColor(Color.TRANSPARENT);
+
+        //plot.setDomainBoundaries(0, 10, BoundaryMode.GROW);
         //plot.getGraphWidget().setRangeValueFormat(
         //        new DecimalFormat("#####"));
         //plot.getGraphWidget().setDomainValueFormat(
@@ -53,14 +56,11 @@ public class PlotActivity extends AppCompatActivity {
             public double call(double x) {
                 return Math.sin(x);
             }
-        }, 2000);
-        series.setBound(0.0, 8*Math.PI);
+        }, 500);
+        series.setBound(0.0, 8 * Math.PI);
 
         plot.addSeries(series, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         plot.redraw();
-
-        plot.setZoomVertically(false);
-        plot.setZoomHorizontally(true);
 
     }
 }
