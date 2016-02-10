@@ -13,26 +13,21 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/linearLayout2">
+        android:id="@+id/linearLayoutEquation">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Equation"
-            android:id="@+id/textView"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:id="@+id/textView" />
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/textViewEquation"
-            android:layout_alignTop="@+id/textView"
-            android:layout_toRightOf="@+id/textView"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
+            android:inputType="textNoSuggestions"
+            android:typeface="monospace"
             android:singleLine="true" />
     </LinearLayout>
 
@@ -42,23 +37,19 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/linearLayout"
+        android:id="@+id/linearLayoutMain"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_above="@+id/button"
+        android:layout_above="@+id/buttonSolve"
         android:weightSum="1"
-        android:layout_below="@+id/linearLayout2">
+        android:layout_below="@+id/linearLayoutEquation"
+        android:layout_marginTop="10dp">
 
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:id="@+id/listViewVariables"
-            android:layout_below="@+id/linearLayout"
-            android:layout_alignLeft="@+id/linearLayout"
-            android:layout_alignStart="@+id/linearLayout"
-            android:layout_above="@+id/button"
-            android:layout_alignRight="@+id/button"
-            android:layout_alignEnd="@+id/button"
+            android:fadeScrollbars="false"
             android:layout_weight="1.44"
             android:choiceMode="singleChoice" />
 
@@ -121,12 +112,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Solve!"
-        android:id="@+id/button"
+        android:id="@+id/buttonSolve"
         android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/linearLayout"
-        android:layout_alignStart="@+id/linearLayout"
+        android:layout_alignLeft="@+id/linearLayoutMain"
+        android:layout_alignStart="@+id/linearLayoutMain"
         android:layout_marginBottom="19dp"
-        android:layout_alignRight="@+id/linearLayout"
-        android:layout_alignEnd="@+id/linearLayout" />
+        android:layout_alignRight="@+id/linearLayoutMain"
+        android:layout_alignEnd="@+id/linearLayoutMain" />
 
 </RelativeLayout>
