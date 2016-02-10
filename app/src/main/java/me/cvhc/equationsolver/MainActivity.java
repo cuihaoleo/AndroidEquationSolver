@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +17,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,6 +142,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        InputFilter filter = new InputFilter() {
+            public CharSequence filter(CharSequence source, int start, int end,
+                                       Spanned dest, int dstart, int dend) {
+                boolean meetEqual = dest.toString().indexOf('=') != -1;
+
+                for (int i = start; i < end; i++) {
+                    char c = source.charAt(i);
+                    if (c == '=') {
+                        if (meetEqual) {
+                            Toast.makeText(MainActivity.this, R.string.error_multiple_equal_sign, Toast.LENGTH_SHORT).show();
+                            return "";
+                        }
+                    } else if (!Character.isLetter(c) && !Character.isDigit(c)
+                            && "=+-*/^() ".indexOf(c) == -1) {
+                        Toast.makeText(MainActivity.this, R.string.error_illegal_char, Toast.LENGTH_SHORT).show();
+                        return "";
+                    }
+                }
+                return null;
+            }
+        };
+        textViewEquation.setFilters(new InputFilter[]{filter});
+
         textViewEquation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -165,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "right part: " + part[1]);
 
                 if (left.isError() || right.isError()) {
-                    textViewEquation.setBackgroundResource(R.color.red);
+                    textViewEquation.setBackgroundResource(R.color.colorRedAlert);
                 } else {
                     textViewEquation.setBackgroundResource(android.R.color.transparent);
 

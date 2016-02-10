@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">EquationSolver</string>
     <string name="format_bound" formatted="false">%-12.6g</string>
+    <string name="error_multiple_equal_sign">Only one equals sign is allowed.</string>
+    <string name="error_illegal_char">Illegal character.</string>>
 </resources>
