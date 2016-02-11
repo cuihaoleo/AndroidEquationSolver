@@ -27,7 +27,6 @@
             android:layout_height="wrap_content"
             android:id="@+id/textViewEquation"
             android:inputType="textNoSuggestions"
-            android:typeface="monospace"
             android:singleLine="true" />
     </LinearLayout>
 

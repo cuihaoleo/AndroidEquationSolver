@@ -99,7 +99,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
 
         plot.redraw();
-
     }
 
     private static final int NONE = 0;
