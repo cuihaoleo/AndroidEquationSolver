@@ -204,8 +204,46 @@ public class ExpressionEvaluator {
 
         @Override
         public PropertyStruct visitFunctionCall(ExpressionParser.FunctionCallContext ctx) {
-            // do nothing yet~
-            return visit(ctx.expr());
+            PropertyStruct prop = NodeProperty.get(ctx);
+            if (prop != null && CachedVariables.containsAll(prop.Variables))
+                return prop;
+
+            PropertyStruct child = visit(ctx.expr());
+            PropertyStruct current = new PropertyStruct();
+
+            current.Determined = child.Determined;
+            current.Variables = new HashSet<>(child.Variables);
+
+            Double v = child.Value;
+            String func = ctx.FUNC().getText();
+
+            switch (func) {
+                case "abs":
+                    current.Value = Math.abs(v); break;
+                case "sqrt":
+                    current.Value = Math.sqrt(v); break;
+                case "sin":
+                    current.Value = Math.sin(v); break;
+                case "cos":
+                    current.Value = Math.cos(v); break;
+                case "tan":
+                    current.Value = Math.tan(v); break;
+                case "sinh":
+                    current.Value = Math.sinh(v); break;
+                case "cosh":
+                    current.Value = Math.cosh(v); break;
+                case "tanh":
+                    current.Value = Math.tanh(v); break;
+                case "log":
+                    current.Value = Math.log10(v); break;
+                case "ln":
+                    current.Value = Math.log(v); break;
+                default:
+                    // todo: deal with undefined function
+                    break;
+            }
+
+            return current;
         }
 
         @Override
