@@ -17,4 +17,10 @@ public class ExpressionEvaluatorTest {
         ExpressionEvaluator eval = new ExpressionEvaluator("1.2+");
         assertTrue(eval.isError());
     }
+
+    @Test
+    public void testError2() throws Exception {
+        ExpressionEvaluator eval = new ExpressionEvaluator("1.2=3");
+        assertTrue(eval.isError());
+    }
 }
