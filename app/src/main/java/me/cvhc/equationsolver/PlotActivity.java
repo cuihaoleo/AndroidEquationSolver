@@ -94,7 +94,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         minX = plot.getCalculatedMinX().doubleValue();
         maxX = plot.getCalculatedMaxX().doubleValue();
 
-        plot.setUserRangeOrigin(0);
+        plot.centerOnRangeOrigin(0.0);
         textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
         textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
 

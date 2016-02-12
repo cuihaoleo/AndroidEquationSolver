@@ -13,7 +13,10 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -43,6 +46,28 @@ public class MainActivity extends AppCompatActivity {
     HashSet<Character> usedIDs = new HashSet<>();
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
+
+    private InputFilter simpleInputFilter = new InputFilter() {
+        public CharSequence filter(CharSequence source, int start, int end,
+                                   Spanned dest, int dstart, int dend) {
+            boolean meetEqual = dest.toString().indexOf('=') != -1;
+
+            for (int i = start; i < end; i++) {
+                char c = source.charAt(i);
+                if (c == '=') {
+                    if (meetEqual) {
+                        Toast.makeText(MainActivity.this, R.string.error_multiple_equal_sign, Toast.LENGTH_SHORT).show();
+                        return "";
+                    }
+                } else if (!Character.isLetter(c) && !Character.isDigit(c)
+                        && "=+-*/^() ".indexOf(c) == -1) {
+                    Toast.makeText(MainActivity.this, R.string.error_illegal_char, Toast.LENGTH_SHORT).show();
+                    return "";
+                }
+            }
+            return null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,58 +137,49 @@ public class MainActivity extends AppCompatActivity {
                     selector.show();
                 } else {
                     AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                    alert.setTitle("Setting ID");
-
                     final EditText input = new EditText(MainActivity.this);
                     String exp = settingIDAdapter.getExpression(id);
+
+                    alert.setTitle("Setting ID");
+                    alert.setView(input);
+
                     input.setText(exp == null ? "" : exp);
                     input.setSingleLine(true);
+                    input.setFilters(new InputFilter[]{simpleInputFilter});
 
-                    alert.setView(input);
-                    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int n) {
-                            ExpressionEvaluator eval;
+                    final AlertDialog dialog = alert.create();
 
-                            eval = new ExpressionEvaluator(input.getText().toString());
-                            if (eval.isError()) {
-                                dialog.dismiss();  // TODO: give some error message
+                    input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                        @Override
+                        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                                ExpressionEvaluator eval;
+                                eval = new ExpressionEvaluator(input.getText().toString());
+                                if (eval.isError()) {
+                                    Toast.makeText(MainActivity.this, R.string.error_illegal_expression, Toast.LENGTH_SHORT).show();
+                                    return true;
+                                } else {
+                                    settingIDAdapter.assignID(id, eval);
+                                    settingIDAdapter.notifyDataSetChanged();
+                                    Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
+                                    dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+                                    dialog.dismiss();
+                                    return false;
+                                }
                             } else {
-                                settingIDAdapter.assignID(id, eval);
-                                settingIDAdapter.notifyDataSetChanged();
-                                Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
+                                return false;
                             }
                         }
+
                     });
 
-                    alert.setNegativeButton("Cancel", null);
-                    alert.show();
+                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                    dialog.show();
                 }
             }
         });
 
-        InputFilter filter = new InputFilter() {
-            public CharSequence filter(CharSequence source, int start, int end,
-                                       Spanned dest, int dstart, int dend) {
-                boolean meetEqual = dest.toString().indexOf('=') != -1;
-
-                for (int i = start; i < end; i++) {
-                    char c = source.charAt(i);
-                    if (c == '=') {
-                        if (meetEqual) {
-                            Toast.makeText(MainActivity.this, R.string.error_multiple_equal_sign, Toast.LENGTH_SHORT).show();
-                            return "";
-                        }
-                    } else if (!Character.isLetter(c) && !Character.isDigit(c)
-                            && "=+-*/^() ".indexOf(c) == -1) {
-                        Toast.makeText(MainActivity.this, R.string.error_illegal_char, Toast.LENGTH_SHORT).show();
-                        return "";
-                    }
-                }
-                return null;
-            }
-        };
-        textViewEquation.setFilters(new InputFilter[]{filter});
-
+        textViewEquation.setFilters(new InputFilter[]{simpleInputFilter});
         textViewEquation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
