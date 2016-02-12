@@ -1,9 +1,9 @@
 package me.cvhc.equationsolver;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     HashSet<Character> usedIDs = new HashSet<>();
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final int MAX_PARTITION = 16384;
+    private static final double ACCEPT_ERROR = 1E-3;
+    private static final double ACCEPT_WIDTH = 1E-16;
 
     private InputFilter simpleInputFilter = new InputFilter() {
         public CharSequence filter(CharSequence source, int start, int end,
@@ -61,6 +64,110 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     };
+
+    // shared variables with SolveTask
+    double lowerBound, upperBound;
+
+    private class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Integer, Double> {
+        FunctionWrapper.MathFunction func;
+
+        protected Double doInBackground(FunctionWrapper.MathFunction... functions) {
+            if (functions.length != 1) {
+                throw new RuntimeException();
+            }
+
+            func = functions[0];
+            Boolean signIsPositive = null;
+            Double savedX1 = null, savedX2 = null;
+            double partition = 1.0;
+            double width = upperBound - lowerBound;
+            Double result = null;
+
+            Double y1 = func.call(lowerBound);
+            if (!y1.isNaN()) {
+                signIsPositive = y1 > 0;
+                savedX1 = lowerBound;
+            }
+
+            while (partition <= MAX_PARTITION && savedX2 == null && result == null) {
+                if (isCancelled()) break;
+
+                for (int i=1; i<=partition; i+=2) {
+                    double x = i/partition*width;
+                    Double y = func.call(x);
+
+                    if (y == 0) {
+                        result = x;
+                        break;
+                    }
+
+                    if (!y.isNaN()) {
+                        if (signIsPositive == null) {
+                            signIsPositive = y > 0;
+                            savedX1 = x;
+                        } else if (signIsPositive != (y > 0)) {
+                            savedX2 = x;
+                            break;
+                        }
+                    }
+                }
+
+                partition *= 2.0;
+            }
+
+            if (savedX1 == null || savedX2 == null) {
+                return null;
+            }
+
+            double lo = Math.min(savedX1, savedX2);
+            double hi = Math.max(savedX1, savedX2);
+
+            double y_lo = func.call(lo);
+            double y_hi = func.call(hi);
+            if (y_hi == 0 || y_lo == 0) {
+                result = y_hi == 0 ? hi : lo;
+            }
+
+            if (result == null && !isCancelled()) {
+                double mid = 0.0, y_mid = Double.POSITIVE_INFINITY;
+                while (hi - lo > ACCEPT_WIDTH) {
+                    mid = (lo + hi) / 2.0;
+                    y_mid = func.call(mid);
+
+                    if (y_mid == 0) { break; }
+                    if ((y_mid < 0) == (y_lo > 0)) { hi = mid; } else { lo = mid; }
+                }
+
+                result = y_mid < ACCEPT_ERROR ? mid : null;
+            }
+
+            return result;
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+            // todo: show progress
+        }
+
+        protected void onPostExecute(Double result) {
+            if (result == null) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Result")
+                        .setMessage("No result")
+                        .setPositiveButton(android.R.string.yes, null)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
+                        .show();
+                return;
+            }
+
+            double error = func.call(result);
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Result")
+                    .setMessage("Result = " + result.toString())
+                    .setPositiveButton(android.R.string.yes, null)
+                    .setIconAttribute(android.R.attr.searchIcon)
+                    .show();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,12 +231,34 @@ public class MainActivity extends AppCompatActivity {
         buttonSolve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Result")
-                        .setMessage("The result is ...")
-                        .setPositiveButton(android.R.string.yes, null)
-                        .setIconAttribute(android.R.attr.searchIcon)
-                        .show();
+                String lowerString = textLower.getText().toString();
+                String upperString = textUpper.getText().toString();
+
+                try {
+                    lowerBound = Double.parseDouble(lowerString);
+                    upperBound = Double.parseDouble(upperString);
+                } catch (NumberFormatException e) {
+                    lowerBound = -1.0;
+                    upperBound = 1.0;
+                }
+
+                final ExpressionEvaluator left = new ExpressionEvaluator(leftEval.toString());
+                final ExpressionEvaluator right = new ExpressionEvaluator(rightEval.toString());
+                final Character variable = settingIDAdapter.getVariable();
+
+                final HashMap<Character, Double> constValues = settingIDAdapter.resolveIDs();
+                left.updateVariables(constValues);
+                right.updateVariables(constValues);
+
+                new SolveTask().execute(new FunctionWrapper.MathFunction() {
+                    @Override
+                    public double call(double x) {
+                        left.setVariable(variable, x);
+                        right.setVariable(variable, x);
+                        return left.getValue() - right.getValue();
+                    }
+                });
+
                 return;
             }
         });
