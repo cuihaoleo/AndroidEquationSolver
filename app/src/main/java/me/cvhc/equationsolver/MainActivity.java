@@ -6,10 +6,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Html;
 import android.text.InputFilter;
-import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -18,22 +15,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -60,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                         return "";
                     }
                 } else if (!Character.isLetter(c) && !Character.isDigit(c)
-                        && "=+-*/^() ".indexOf(c) == -1) {
+                        && ".=+-*/^() ".indexOf(c) == -1) {
                     Toast.makeText(MainActivity.this, R.string.error_illegal_char, Toast.LENGTH_SHORT).show();
                     return "";
                 }
