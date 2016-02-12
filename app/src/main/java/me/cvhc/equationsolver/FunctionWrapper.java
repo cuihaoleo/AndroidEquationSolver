@@ -1,6 +1,11 @@
 package me.cvhc.equationsolver;
 
+import android.util.Pair;
+
 import com.androidplot.xy.XYSeries;
+
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class FunctionWrapper implements XYSeries {
     public interface MathFunction {
@@ -12,15 +17,45 @@ public class FunctionWrapper implements XYSeries {
     double upperBound = 0, lowerBound = 0;
     double step = 0;
 
+    private Pair<Double,Double>[] series;
+    private LinkedList<Pair<Double,Double>> seriesCache = new LinkedList<>();
+
     public FunctionWrapper(MathFunction f, int size) {
         function = f;
         seriesSize = size;
+        seriesCache.addFirst(new Pair<Double,Double>(Double.NEGATIVE_INFINITY, null));
+        seriesCache.addLast(new Pair<Double, Double>(Double.POSITIVE_INFINITY, null));
     }
 
     public void setBound(Double l, Double u) {
         if (l != null) { lowerBound = l; }
         if (u != null) { upperBound = u; }
         step = (upperBound - lowerBound) / seriesSize;
+
+        ListIterator<Pair<Double,Double>> iter = seriesCache.listIterator();
+        Double x = lowerBound;
+
+        series = new Pair[seriesSize];
+        for (int i=0; i<seriesSize; i++, x+=step) {
+            double lower = x - step/2.0;
+            double upper = x + step/2.0;
+            while (iter.hasNext()) {
+                Pair<Double,Double> cur = iter.next();
+                if (cur.first <= lower) {
+                    iter.remove();
+                } else if (cur.first < upper) {
+                    series[i] = cur;
+                    break;
+                } else {
+                    Pair<Double, Double> p = new Pair<>(x, function.call(x));
+                    iter.previous();
+                    iter.add(series[i] = p);
+                    break;
+                }
+            }
+        }
+
+        seriesCache.addFirst(new Pair<Double,Double>(Double.NEGATIVE_INFINITY, null));
     }
 
     public double getLowerBound() {
@@ -38,12 +73,14 @@ public class FunctionWrapper implements XYSeries {
 
     @Override
     public Number getX(int index) {
-        return lowerBound + step * index;
+        //return lowerBound + step * index;
+        return series[index].first;
     }
 
     @Override
     public Number getY(int index) {
-        return function.call(getX(index).doubleValue());
+        //return function.call(getX(index).doubleValue());
+        return series[index].second;
     }
 
     @Override
