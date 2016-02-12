@@ -7,6 +7,7 @@ import com.androidplot.xy.XYSeries;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+
 public class FunctionWrapper implements XYSeries {
     public interface MathFunction {
         double call(double x);
@@ -16,6 +17,7 @@ public class FunctionWrapper implements XYSeries {
     int seriesSize;
     double upperBound = 0, lowerBound = 0;
     double step = 0;
+    boolean allInvalid = true;
 
     private Pair<Double,Double>[] series;
     private LinkedList<Pair<Double,Double>> seriesCache = new LinkedList<>();
@@ -36,11 +38,15 @@ public class FunctionWrapper implements XYSeries {
         Double x = lowerBound;
 
         series = new Pair[seriesSize];
+        allInvalid = true;
+
         for (int i=0; i<seriesSize; i++, x+=step) {
             double lower = x - step/2.0;
             double upper = x + step/2.0;
+            Pair<Double, Double> cur = null;
+
             while (iter.hasNext()) {
-                Pair<Double,Double> cur = iter.next();
+                cur = iter.next();
                 if (cur.first <= lower) {
                     iter.remove();
                 } else if (cur.first < upper) {
@@ -49,9 +55,13 @@ public class FunctionWrapper implements XYSeries {
                 } else {
                     Pair<Double, Double> p = new Pair<>(x, function.call(x));
                     iter.previous();
-                    iter.add(series[i] = p);
+                    iter.add(cur = series[i] = p);
                     break;
                 }
+            }
+
+            if (allInvalid && !(Double.isNaN(cur.second) || Double.isInfinite(cur.second))) {
+                allInvalid = false;
             }
         }
 
@@ -80,7 +90,12 @@ public class FunctionWrapper implements XYSeries {
     @Override
     public Number getY(int index) {
         //return function.call(getX(index).doubleValue());
-        return series[index].second;
+        Double d = series[index].second;
+        if (Double.isNaN(d) || Double.isInfinite(d)) {
+            return allInvalid ? 0 : null;
+        } else {
+            return series[index].second;
+        }
     }
 
     @Override
