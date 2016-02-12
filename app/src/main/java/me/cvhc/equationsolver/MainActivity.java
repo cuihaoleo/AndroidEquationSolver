@@ -1,6 +1,7 @@
 package me.cvhc.equationsolver;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     TextView textViewEquation;
     ListView listViewIDs;
+    EditText textLower, textUpper;
     SettingIDAdapter settingIDAdapter;
 
     ExpressionEvaluator leftEval, rightEval;
@@ -65,24 +67,70 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button buttonPlot = (Button) findViewById(R.id.buttonPlot);
+        textLower = (EditText)findViewById(R.id.textLower);
+        textUpper = (EditText)findViewById(R.id.textUpper);
+        Button buttonPlot = (Button)findViewById(R.id.buttonPlot);
+        Button buttonSolve = (Button)findViewById(R.id.buttonSolve);
+
         buttonPlot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (leftEval == null || rightEval == null) {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Error")
+                            .setMessage("The input equation is invalid.")
+                            .setPositiveButton(android.R.string.yes, null)
+                            .setIconAttribute(android.R.attr.alertDialogIcon)
+                            .show();
+                    return;
+                }
+
                 Intent intent = new Intent(MainActivity.this, PlotActivity.class);
                 final HashMap<Character, Double> constValues = settingIDAdapter.resolveIDs();
 
                 if (constValues == null) {
-                    // TODO: give some error message
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Error")
+                            .setMessage("Some constants cannot be determined yet.")
+                            .setPositiveButton(android.R.string.yes, null)
+                            .setIconAttribute(android.R.attr.alertDialogIcon)
+                            .show();
                     return;
+                }
+
+                Double lower, upper;
+                String lowerString = textLower.getText().toString();
+                String upperString = textUpper.getText().toString();
+
+                try {
+                    lower = Double.parseDouble(lowerString);
+                    upper = Double.parseDouble(upperString);
+                } catch (NumberFormatException e) {
+                    lower = -1.0;
+                    upper = 1.0;
                 }
 
                 intent.putExtra("LEFT_PART", leftEval.toString());
                 intent.putExtra("RIGHT_PART", rightEval.toString());
+                intent.putExtra("LOWER_BOUND", lower);
+                intent.putExtra("UPPER_BOUND", upper);
                 intent.putExtra("CONSTANT_VALUES", constValues);
                 intent.putExtra("VARIABLE", settingIDAdapter.getVariable());
 
                 startActivityForResult(intent, 0);
+            }
+        });
+
+        buttonSolve.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Result")
+                        .setMessage("The result is ...")
+                        .setPositiveButton(android.R.string.yes, null)
+                        .setIconAttribute(android.R.attr.searchIcon)
+                        .show();
+                return;
             }
         });
 
@@ -108,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                         strings[i] = items.get(i) + " as variable";
                     }
 
-                    selector.setSingleChoiceItems(strings, 0, new DialogInterface.OnClickListener() {
+                    selector.setSingleChoiceItems(strings, items.indexOf(variable), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int position) {
                             Character selection = items.get(position);
@@ -197,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "right part: " + part[1]);
 
                 if (left.isError() || right.isError()) {
+                    leftEval = rightEval = null;
                     textViewEquation.setBackgroundResource(R.color.colorRedAlert);
                 } else {
                     textViewEquation.setBackgroundResource(android.R.color.transparent);
@@ -220,6 +269,10 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             double lower = data.getDoubleExtra("LOWER_BOUND", 0.0);
             double upper = data.getDoubleExtra("UPPER_BOUND", 0.0);
+
+            textLower.setText(String.valueOf(lower));
+            textUpper.setText(String.valueOf(upper));
+
             Log.d(LOG_TAG, "Lower bound: " + lower);
             Log.d(LOG_TAG, "Upper bound: " + upper);
         }

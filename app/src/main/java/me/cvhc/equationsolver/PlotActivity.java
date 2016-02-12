@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -34,6 +35,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         Intent intent = getIntent();
 
+        double lowerBound = intent.getDoubleExtra("LOWER_BOUND", -1.0);
+        double upperBound = intent.getDoubleExtra("UPPER_BOUND", 1.0);
         String leftPart = intent.getStringExtra("LEFT_PART");
         String rightPart = intent.getStringExtra("RIGHT_PART");
         final ExpressionEvaluator left = new ExpressionEvaluator(leftPart);
@@ -78,6 +81,9 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.getLegendWidget().setVisible(false);
         plot.getTitleWidget().setVisible(false);
 
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
@@ -85,8 +91,11 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 right.setVariable(variable, x);
                 return left.getValue() - right.getValue();
             }
-        }, 200);
-        mainSeries.setBound(-1.0, 1.0);
+        }, metrics.widthPixels / 2);
+
+        mainSeries.setBound(lowerBound, upperBound);
+        textLowerBound.setText(String.valueOf(lowerBound));
+        textUpperBound.setText(String.valueOf(upperBound));
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         plot.calculateMinMaxVals();
