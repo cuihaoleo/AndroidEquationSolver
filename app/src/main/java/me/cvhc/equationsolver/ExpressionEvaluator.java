@@ -238,6 +238,8 @@ public class ExpressionEvaluator {
                     current.Value = Math.log10(v); break;
                 case "ln":
                     current.Value = Math.log(v); break;
+                case "exp":
+                    current.Value = Math.exp(v); break;
                 default:
                     // todo: deal with undefined function
                     break;
