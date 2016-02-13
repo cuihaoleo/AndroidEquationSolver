@@ -59,29 +59,27 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="1.0000"
-            android:id="@+id/textUpperBound"
+            android:text="0.0000"
+            android:id="@+id/textLowerBound"
             android:gravity="center_vertical"
             android:textStyle="bold"
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@+id/labelLower"
             android:layout_toEndOf="@+id/labelLower"
-            android:layout_above="@+id/labelUpper"
-            android:editable="false" />
+            android:layout_above="@+id/labelUpper" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="3.1415"
-            android:id="@+id/textLowerBound"
+            android:text="0.0000"
+            android:id="@+id/textUpperBound"
             android:gravity="center_vertical"
             android:textStyle="bold"
-            android:layout_below="@+id/textUpperBound"
+            android:layout_below="@+id/textLowerBound"
             android:layout_toEndOf="@+id/labelUpper"
             android:layout_toRightOf="@+id/labelUpper"
-            android:layout_alignBottom="@+id/labelUpper"
-            android:editable="false" />
+            android:layout_alignBottom="@+id/labelUpper" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -116,21 +114,15 @@
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Apply"
-                android:id="@+id/buttonApply"
-                android:layout_below="@+id/buttonCancel"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
+                android:text="@android:string/ok"
+                android:id="@+id/buttonApply" />
 
             <Button
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Cancel"
-                android:id="@+id/buttonCancel"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
+                android:text="@android:string/cancel"
+                android:id="@+id/buttonCancel" />
         </LinearLayout>
     </RelativeLayout>
 

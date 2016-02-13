@@ -271,4 +271,9 @@ public class ExpressionEvaluator {
             return current;
         }
     }
+
+    public static Double eval(String exp) {
+        ExpressionEvaluator e = new ExpressionEvaluator(exp);
+        return e.isError() ? null : e.getValue();
+    }
 }

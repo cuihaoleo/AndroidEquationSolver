@@ -15,7 +15,12 @@ import android.widget.TextView;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlot;
+import com.androidplot.xy.XYStepMode;
 
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.HashMap;
 
 
@@ -47,8 +52,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         left.updateVariables(constValues);
         right.updateVariables(constValues);
 
-        textUpperBound = (TextView)findViewById(R.id.textUpperBound);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
+        textUpperBound = (TextView)findViewById(R.id.textUpperBound);
         buttonApply = (Button)findViewById(R.id.buttonApply);
         buttonCancel = (Button)findViewById(R.id.buttonCancel);
 
@@ -75,8 +80,31 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot = (XYPlot)findViewById(R.id.plot);
         plot.setOnTouchListener(this);
 
-        plot.getGraphWidget().setTicksPerRangeLabel(2);
-        plot.getGraphWidget().setTicksPerDomainLabel(2);
+        class CustomFormat extends NumberFormat {
+            @Override
+            public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
+                return new StringBuffer(String.format("%6.4g", value));
+            }
+
+            @Override
+            public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
+                return null;
+            }
+
+            @Override
+            public Number parse(String string, ParsePosition position) {
+                return null;
+            }
+        };
+
+        plot.setDomainStep(XYStepMode.SUBDIVIDE, 5);
+        plot.setDomainValueFormat(new CustomFormat());
+        plot.getGraphWidget().getDomainTickLabelPaint().setTextSize(16);
+        plot.getGraphWidget().getDomainOriginTickLabelPaint().setTextSize(16);
+        plot.setRangeStep(XYStepMode.SUBDIVIDE, 7);
+        plot.setRangeValueFormat(new CustomFormat());
+        plot.getGraphWidget().getRangeTickLabelPaint().setTextSize(16);
+        plot.getGraphWidget().getRangeOriginTickLabelPaint().setTextSize(16);
 
         plot.getLegendWidget().setVisible(false);
         plot.getTitleWidget().setVisible(false);
@@ -92,18 +120,15 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 return left.getValue() - right.getValue();
             }
         }, metrics.widthPixels / 2);
-
         mainSeries.setBound(lowerBound, upperBound);
-        textLowerBound.setText(String.valueOf(lowerBound));
-        textUpperBound.setText(String.valueOf(upperBound));
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         plot.calculateMinMaxVals();
+        plot.centerOnRangeOrigin(0.0);
 
         minX = plot.getCalculatedMinX().doubleValue();
         maxX = plot.getCalculatedMaxX().doubleValue();
 
-        plot.centerOnRangeOrigin(0.0);
         textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
         textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
 

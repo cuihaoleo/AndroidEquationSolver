@@ -85,7 +85,9 @@
         <EditText
             android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:inputType="numberSigned"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:inputType="textNoSuggestions"
             android:id="@+id/textLower"
             android:padding="2dp"
             android:textSize="14sp"
@@ -109,9 +111,10 @@
         <EditText
             android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:inputType="numberSigned"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:inputType="textNoSuggestions"
             android:id="@+id/textUpper"
-            android:textAppearance="?android:attr/textAppearanceSmallInverse"
             android:padding="2dp"
             android:textSize="14sp"
             android:layout_alignTop="@+id/labelSearchTo"

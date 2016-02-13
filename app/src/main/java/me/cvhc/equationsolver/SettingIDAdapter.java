@@ -3,6 +3,7 @@ package me.cvhc.equationsolver;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ class SettingIDAdapter extends BaseAdapter {
     private List<Character> usedList = null;
     private Set<Character> usedSet = null;
     private HashMap<Character, Double> calculated = null;
+    private boolean allResolved = false;
     private Character variable = 'x';
 
     public SettingIDAdapter(Activity activity,
@@ -31,7 +33,7 @@ class SettingIDAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return usedSet.contains(variable) ? usedSet.size() : usedSet.size() + 1;
+        return usedList == null ? 1 : (usedList.size() + 1);
     }
 
     @Override
@@ -85,6 +87,22 @@ class SettingIDAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged() {
+        boolean flag = true;
+        HashSet<Character> extendedSet = new HashSet<>(usedSet);
+
+        while (flag) {
+            flag = false;
+            for (Character c: usedSet) {
+                if (c != variable) {
+                    ExpressionEvaluator eval = assignment.get(c);
+                    if (eval != null) {
+                        flag = flag || extendedSet.addAll(eval.getProperty().Variables);
+                    }
+                }
+            }
+        }
+
+        extendedSet.removeAll(usedSet);
         usedList = new ArrayList<>(usedSet);
         Collections.sort(usedList);
 
@@ -92,7 +110,10 @@ class SettingIDAdapter extends BaseAdapter {
             setVariable(usedList.get(0));
         }
 
+        usedList.addAll(extendedSet);
+        Collections.sort(usedList);
         usedList.remove(variable);
+
         super.notifyDataSetChanged();
     }
 
@@ -112,8 +133,8 @@ class SettingIDAdapter extends BaseAdapter {
         return variable;
     }
 
-    public final HashMap<Character, Double> resolveIDs() {
-        boolean ret = true;
+    public final boolean resolveIDs() {
+        allResolved = true;
 
         calculated = new HashMap<>();
         calculated.put(variable, null);
@@ -131,7 +152,7 @@ class SettingIDAdapter extends BaseAdapter {
                 ExpressionEvaluator eval = assignment.get(id);
 
                 if (id != variable && eval == null) {
-                    ret = false;
+                    allResolved = false;
                     continue;
                 }
 
@@ -152,12 +173,16 @@ class SettingIDAdapter extends BaseAdapter {
             }
 
             if (!flag) {
-                ret = false;
+                allResolved = false;
                 break;
             }
         }
 
         calculated.remove(variable);
-        return ret ? calculated : null;
+        return allResolved;
+    }
+
+    public final HashMap<Character, Double> getResolvedIDs() {
+        return allResolved ? calculated : null;
     }
 }

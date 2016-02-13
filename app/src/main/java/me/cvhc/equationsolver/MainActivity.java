@@ -1,6 +1,7 @@
 package me.cvhc.equationsolver;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -24,7 +25,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 
 
@@ -38,10 +38,9 @@ public class MainActivity extends AppCompatActivity {
     ExpressionEvaluator leftEval, rightEval;
     HashSet<Character> usedIDs = new HashSet<>();
 
+    private double lowerBound, upperBound;
+
     private final String LOG_TAG = MainActivity.class.getSimpleName();
-    private static final int MAX_PARTITION = 16384;
-    private static final double ACCEPT_ERROR = 1E-3;
-    private static final double ACCEPT_WIDTH = 1E-16;
 
     private InputFilter simpleInputFilter = new InputFilter() {
         public CharSequence filter(CharSequence source, int start, int end,
@@ -65,12 +64,35 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // shared variables with SolveTask
-    double lowerBound, upperBound;
-
-    private class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Integer, Double> {
+    private class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, Double> {
+        private ProgressDialog progressDialog;
         FunctionWrapper.MathFunction func;
 
+        private final static int MAX_PROGRESS = 1000;
+        private static final int MAX_PARTITION = 16384;
+        private static final double ACCEPT_ERROR = 1E-3;
+        private static final double ACCEPT_WIDTH = 1E-16;
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setMessage("Solving...");
+            progressDialog.setCancelable(false);
+            progressDialog.setMax(MAX_PROGRESS);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setProgressNumberFormat(null);
+            progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                    getString(android.R.string.cancel),
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SolveTask.this.cancel(false);
+                        }
+                    });
+            progressDialog.show();
+        }
+
+        @Override
         protected Double doInBackground(FunctionWrapper.MathFunction... functions) {
             if (functions.length != 1) {
                 throw new RuntimeException();
@@ -91,9 +113,10 @@ public class MainActivity extends AppCompatActivity {
 
             while (partition <= MAX_PARTITION && savedX2 == null && result == null) {
                 if (isCancelled()) break;
+                publishProgress(partition / MAX_PARTITION * 0.5);
 
                 for (int i=1; i<=partition; i+=2) {
-                    double x = i/partition*width;
+                    double x = lowerBound + i/partition*width;
                     Double y = func.call(x);
 
                     if (y == 0) {
@@ -119,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
 
+            publishProgress(0.5);
+
             double lo = Math.min(savedX1, savedX2);
             double hi = Math.max(savedX1, savedX2);
 
@@ -141,14 +166,26 @@ public class MainActivity extends AppCompatActivity {
                 result = y_mid < ACCEPT_ERROR ? mid : null;
             }
 
+            publishProgress(1.0);
+
             return result;
         }
 
-        protected void onProgressUpdate(Integer... progress) {
-            // todo: show progress
+        @Override
+        protected void onCancelled(Double aDouble) {
+            super.onCancelled(aDouble);
+            progressDialog.dismiss();
         }
 
+        @Override
+        protected void onProgressUpdate(Double... progress) {
+            progressDialog.setProgress((int)(progress[0] * MAX_PROGRESS));
+        }
+
+        @Override
         protected void onPostExecute(Double result) {
+            progressDialog.dismiss();
+
             if (result == null) {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("Result")
@@ -156,17 +193,59 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton(android.R.string.yes, null)
                         .setIconAttribute(android.R.attr.alertDialogIcon)
                         .show();
-                return;
+            } else {
+                double error = func.call(result);
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Result")
+                        .setMessage("Result = " + result.toString())
+                        .setPositiveButton(android.R.string.yes, null)
+                        .setIconAttribute(android.R.attr.dialogIcon)
+                        .show();
             }
-
-            double error = func.call(result);
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Result")
-                    .setMessage("Result = " + result.toString())
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.searchIcon)
-                    .show();
         }
+    }
+
+    private boolean prepareEquation() {
+        if (leftEval == null || rightEval == null) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Error")
+                    .setMessage("The input equation is invalid.")
+                    .setPositiveButton(android.R.string.yes, null)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .show();
+            return false;
+        }
+
+        if (!settingIDAdapter.resolveIDs()) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Error")
+                    .setMessage("Some constants cannot be determined yet.")
+                    .setPositiveButton(android.R.string.yes, null)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .show();
+            return false;
+        }
+
+        Double lower, upper;
+        String lowerString = textLower.getText().toString();
+        String upperString = textUpper.getText().toString();
+
+        lower = lowerString.length() == 0 ? Double.valueOf(-1.0) : ExpressionEvaluator.eval(lowerString);
+        upper = upperString.length() == 0 ? Double.valueOf(+1.0) : ExpressionEvaluator.eval(upperString);
+
+        if (lower == null || upper == null) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Error")
+                    .setMessage("Invalid search bound.")
+                    .setPositiveButton(android.R.string.yes, null)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .show();
+            return false;
+        }
+
+        lowerBound = lower;
+        upperBound = upper;
+        return true;
     }
 
     @Override
@@ -182,84 +261,39 @@ public class MainActivity extends AppCompatActivity {
         buttonPlot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (leftEval == null || rightEval == null) {
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Error")
-                            .setMessage("The input equation is invalid.")
-                            .setPositiveButton(android.R.string.yes, null)
-                            .setIconAttribute(android.R.attr.alertDialogIcon)
-                            .show();
-                    return;
+                if (prepareEquation()) {
+                    Intent intent = new Intent(MainActivity.this, PlotActivity.class)
+                            .putExtra("LEFT_PART", leftEval.toString())
+                            .putExtra("RIGHT_PART", rightEval.toString())
+                            .putExtra("LOWER_BOUND", lowerBound)
+                            .putExtra("UPPER_BOUND", upperBound)
+                            .putExtra("CONSTANT_VALUES", settingIDAdapter.getResolvedIDs())
+                            .putExtra("VARIABLE", settingIDAdapter.getVariable());
+                    startActivityForResult(intent, 0);
                 }
-
-                Intent intent = new Intent(MainActivity.this, PlotActivity.class);
-                final HashMap<Character, Double> constValues = settingIDAdapter.resolveIDs();
-
-                if (constValues == null) {
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Error")
-                            .setMessage("Some constants cannot be determined yet.")
-                            .setPositiveButton(android.R.string.yes, null)
-                            .setIconAttribute(android.R.attr.alertDialogIcon)
-                            .show();
-                    return;
-                }
-
-                Double lower, upper;
-                String lowerString = textLower.getText().toString();
-                String upperString = textUpper.getText().toString();
-
-                try {
-                    lower = Double.parseDouble(lowerString);
-                    upper = Double.parseDouble(upperString);
-                } catch (NumberFormatException e) {
-                    lower = -1.0;
-                    upper = 1.0;
-                }
-
-                intent.putExtra("LEFT_PART", leftEval.toString());
-                intent.putExtra("RIGHT_PART", rightEval.toString());
-                intent.putExtra("LOWER_BOUND", lower);
-                intent.putExtra("UPPER_BOUND", upper);
-                intent.putExtra("CONSTANT_VALUES", constValues);
-                intent.putExtra("VARIABLE", settingIDAdapter.getVariable());
-
-                startActivityForResult(intent, 0);
             }
         });
 
         buttonSolve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String lowerString = textLower.getText().toString();
-                String upperString = textUpper.getText().toString();
+                if (prepareEquation()) {
+                    final ExpressionEvaluator left = new ExpressionEvaluator(leftEval.toString());
+                    final ExpressionEvaluator right = new ExpressionEvaluator(rightEval.toString());
+                    final Character variable = settingIDAdapter.getVariable();
 
-                try {
-                    lowerBound = Double.parseDouble(lowerString);
-                    upperBound = Double.parseDouble(upperString);
-                } catch (NumberFormatException e) {
-                    lowerBound = -1.0;
-                    upperBound = 1.0;
+                    left.updateVariables(settingIDAdapter.getResolvedIDs());
+                    right.updateVariables(settingIDAdapter.getResolvedIDs());
+
+                    new SolveTask().execute(new FunctionWrapper.MathFunction() {
+                        @Override
+                        public double call(double x) {
+                            left.setVariable(variable, x);
+                            right.setVariable(variable, x);
+                            return left.getValue() - right.getValue();
+                        }
+                    });
                 }
-
-                final ExpressionEvaluator left = new ExpressionEvaluator(leftEval.toString());
-                final ExpressionEvaluator right = new ExpressionEvaluator(rightEval.toString());
-                final Character variable = settingIDAdapter.getVariable();
-
-                final HashMap<Character, Double> constValues = settingIDAdapter.resolveIDs();
-                left.updateVariables(constValues);
-                right.updateVariables(constValues);
-
-                new SolveTask().execute(new FunctionWrapper.MathFunction() {
-                    @Override
-                    public double call(double x) {
-                        left.setVariable(variable, x);
-                        right.setVariable(variable, x);
-                        return left.getValue() - right.getValue();
-                    }
-                });
-
-                return;
             }
         });
 
@@ -383,8 +417,8 @@ public class MainActivity extends AppCompatActivity {
                     rightEval = right;
 
                     usedIDs.clear();
-                    usedIDs.addAll(left.getProperty().Variables);
-                    usedIDs.addAll(right.getProperty().Variables);
+                    usedIDs.addAll(leftEval.getProperty().Variables);
+                    usedIDs.addAll(rightEval.getProperty().Variables);
 
                     settingIDAdapter.notifyDataSetChanged();
                 }
@@ -399,8 +433,8 @@ public class MainActivity extends AppCompatActivity {
             double lower = data.getDoubleExtra("LOWER_BOUND", 0.0);
             double upper = data.getDoubleExtra("UPPER_BOUND", 0.0);
 
-            textLower.setText(String.valueOf(lower));
-            textUpper.setText(String.valueOf(upper));
+            textLower.setText(String.format(getString(R.string.format_bound), lower));
+            textUpper.setText(String.format(getString(R.string.format_bound), upper));
 
             Log.d(LOG_TAG, "Lower bound: " + lower);
             Log.d(LOG_TAG, "Upper bound: " + upper);
