@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (savedX1 == null || savedX2 == null) {
-                return null;
+                return result;
             }
 
             publishProgress(0.5);
