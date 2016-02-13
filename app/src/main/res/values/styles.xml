@@ -12,6 +12,10 @@
         <item name="graphMarginTop">10dp</item>
         <item name="graphMarginBottom">10dp</item>
         <item name="graphMarginLeft">25dp</item>
-        <item name="graphMarginRight">20dp</item>
+        <item name="graphMarginRight">25dp</item>
+        <item name="domainTickLabelTextSize">8sp</item>
+        <item name="rangeTickLabelTextSize">8sp</item>
+        <item name="domainOriginTickLabelTextSize">8sp</item>
+        <item name="rangeOriginTickLabelTextSize">8sp</item>
     </style>
 </resources>

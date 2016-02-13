@@ -84,29 +84,29 @@
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Log scale"
-            android:id="@+id/checkLogScale"
+            android:text="X-axis in log scale"
+            android:id="@+id/checkXLogScale"
             android:checked="false"
-            android:layout_alignBottom="@+id/linearLayout3"
+            android:layout_below="@+id/labelUpper"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="X axis"
-            android:id="@+id/checkShowXAxis"
+            android:text="Y-axis in log scale"
+            android:id="@+id/checkYLogScale"
             android:checked="false"
-            android:layout_alignTop="@+id/checkLogScale"
-            android:layout_toRightOf="@+id/checkLogScale"
-            android:layout_toEndOf="@+id/checkLogScale" />
+            android:layout_below="@+id/checkXLogScale"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
             android:id="@+id/linearLayout3"
+            android:layout_alignBottom="@+id/checkYLogScale"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true">
 

@@ -65,7 +65,13 @@ public class FunctionWrapper implements XYSeries {
             }
         }
 
+        seriesCache.addFirst(new Pair<Double, Double>(Double.NEGATIVE_INFINITY, null));
+    }
+
+    public void resetCache() {
+        seriesCache.clear();
         seriesCache.addFirst(new Pair<Double,Double>(Double.NEGATIVE_INFINITY, null));
+        seriesCache.addLast(new Pair<Double, Double>(Double.POSITIVE_INFINITY, null));
     }
 
     public double getLowerBound() {

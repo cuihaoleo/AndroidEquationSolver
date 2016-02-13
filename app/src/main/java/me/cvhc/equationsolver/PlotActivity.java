@@ -5,11 +5,12 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.androidplot.xy.BoundaryMode;
@@ -17,7 +18,6 @@ import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlot;
 import com.androidplot.xy.XYStepMode;
 
-import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -29,6 +29,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private TextView textUpperBound, textLowerBound;
     private Button buttonApply, buttonCancel;
     private XYPlot plot;
+    private CheckBox checkXLogScale, checkYLogScale;
 
     private FunctionWrapper mainSeries = null;
     private double minX;
@@ -56,6 +57,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
         buttonApply = (Button)findViewById(R.id.buttonApply);
         buttonCancel = (Button)findViewById(R.id.buttonCancel);
+        checkXLogScale = (CheckBox)findViewById(R.id.checkXLogScale);
+        checkYLogScale = (CheckBox)findViewById(R.id.checkYLogScale);
 
         buttonApply.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,49 +80,77 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             }
         });
 
+        abstract class CustomFormat extends NumberFormat {
+            @Override
+            abstract public StringBuffer format(double v, StringBuffer b, FieldPosition f);
+            @Override
+            public StringBuffer format(long v, StringBuffer b, FieldPosition f) { return null; }
+            @Override
+            public Number parse(String s, ParsePosition p) { return null; }
+        };
+
+        checkXLogScale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mainSeries.resetCache();
+                if (isChecked) {
+                    minX = logScale(minX);
+                    maxX = logScale(maxX);
+                } else {
+                    minX = logScaleRecover(minX);
+                    maxX = logScaleRecover(maxX);
+                }
+                mainSeries.setBound(minX, maxX);
+                plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
+                plot.redraw();
+            }
+        });
+
+        checkYLogScale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mainSeries.resetCache();
+                mainSeries.setBound(minX, maxX);
+                plot.redraw();
+            }
+        });
+
         plot = (XYPlot)findViewById(R.id.plot);
         plot.setOnTouchListener(this);
 
-        class CustomFormat extends NumberFormat {
+        plot.setDomainStep(XYStepMode.SUBDIVIDE, 5);
+        plot.setDomainValueFormat(new CustomFormat() {
             @Override
             public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
-                return new StringBuffer(String.format("%6.4g", value));
+                double output = checkXLogScale.isChecked() ? logScaleRecover(value) : value;
+                return new StringBuffer(String.format("%6.4g", output));
             }
+        });
 
-            @Override
-            public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
-                return null;
-            }
-
-            @Override
-            public Number parse(String string, ParsePosition position) {
-                return null;
-            }
-        };
-
-        plot.setDomainStep(XYStepMode.SUBDIVIDE, 5);
-        plot.setDomainValueFormat(new CustomFormat());
-        plot.getGraphWidget().getDomainTickLabelPaint().setTextSize(16);
-        plot.getGraphWidget().getDomainOriginTickLabelPaint().setTextSize(16);
         plot.setRangeStep(XYStepMode.SUBDIVIDE, 7);
-        plot.setRangeValueFormat(new CustomFormat());
-        plot.getGraphWidget().getRangeTickLabelPaint().setTextSize(16);
-        plot.getGraphWidget().getRangeOriginTickLabelPaint().setTextSize(16);
+        plot.setRangeValueFormat(new CustomFormat() {
+            @Override
+            public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
+                double output = checkYLogScale.isChecked() ? logScaleRecover(value) : value;
+                return new StringBuffer(String.format("%6.4g", output));
+            }
+        });
 
         plot.getLegendWidget().setVisible(false);
         plot.getTitleWidget().setVisible(false);
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
+                if (checkXLogScale.isChecked()) { x = logScaleRecover(x); }
+
                 left.setVariable(variable, x);
                 right.setVariable(variable, x);
-                return left.getValue() - right.getValue();
+
+                double y = left.getValue() - right.getValue();
+                return checkYLogScale.isChecked() ? logScale(y) : y;
             }
-        }, metrics.widthPixels / 2);
+        }, 500);
         mainSeries.setBound(lowerBound, upperBound);
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
@@ -209,5 +240,13 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double x = event.getX(0) - event.getX(1);
         double y = event.getY(0) - event.getY(1);
         return Math.hypot(x, y);
+    }
+
+    private static double logScale(double val) {
+        return Math.signum(val) * Math.log10(Math.abs(val)+1.0);
+    }
+
+    private static double logScaleRecover(double val) {
+        return Math.signum(val) * Math.pow(10, val-1.0);
     }
 }
