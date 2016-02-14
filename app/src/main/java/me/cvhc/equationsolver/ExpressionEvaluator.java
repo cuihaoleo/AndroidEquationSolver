@@ -215,30 +215,28 @@ public class ExpressionEvaluator {
             current.Variables = new HashSet<>(child.Variables);
 
             Double v = child.Value;
-            String func = ctx.FUNC().getText();
-
-            switch (func) {
-                case "abs":
+            switch (ctx.func.getType()) {
+                case ExpressionParser.F_ABS:
                     current.Value = Math.abs(v); break;
-                case "sqrt":
+                case ExpressionParser.F_SQRT:
                     current.Value = Math.sqrt(v); break;
-                case "sin":
+                case ExpressionParser.F_SIN:
                     current.Value = Math.sin(v); break;
-                case "cos":
+                case ExpressionParser.F_COS:
                     current.Value = Math.cos(v); break;
-                case "tan":
+                case ExpressionParser.F_TAN:
                     current.Value = Math.tan(v); break;
-                case "sinh":
+                case ExpressionParser.F_SINH:
                     current.Value = Math.sinh(v); break;
-                case "cosh":
+                case ExpressionParser.F_COSH:
                     current.Value = Math.cosh(v); break;
-                case "tanh":
+                case ExpressionParser.F_TANH:
                     current.Value = Math.tanh(v); break;
-                case "log":
+                case ExpressionParser.F_LOG:
                     current.Value = Math.log10(v); break;
-                case "ln":
+                case ExpressionParser.F_LN:
                     current.Value = Math.log(v); break;
-                case "exp":
+                case ExpressionParser.F_EXP:
                     current.Value = Math.exp(v); break;
                 default:
                     // todo: deal with undefined function

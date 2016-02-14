@@ -14,7 +14,7 @@ factor
     ;
 
 atom
-    : FUNC '(' expr ')'  # FunctionCall
+    : func=(F_ABS|F_SQRT|F_SIN|F_COS|F_TAN|F_SINH|F_COSH|F_TANH|F_LOG|F_LN|F_EXP) '(' expr ')'  # FunctionCall
     | '(' expr ')'  # Brackets
     | ID  # Variable
     | NUMBER  # Literal
@@ -26,8 +26,18 @@ MUL : '*';
 DIV : '/';
 EXP : '^';
 
-FUNC
-    : [a-zA-Z][a-zA-Z]+;
+F_ABS: 'abs';
+F_SQRT: 'sqrt';
+F_SIN: 'sin';
+F_COS: 'cos';
+F_TAN: 'tan';
+F_SINH: 'sinh';
+F_COSH: 'cosh';
+F_TANH: 'tanh';
+F_LOG: 'log';
+F_LN: 'ln';
+F_EXP: 'exp';
+
 ID  : [a-zA-Z];
 NUMBER
     : ([0-9]+|[0-9]*'.'[0-9]+)([eE][-+]?[0-9]+)?;
