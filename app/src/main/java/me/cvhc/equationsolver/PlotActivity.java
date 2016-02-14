@@ -87,22 +87,26 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             public StringBuffer format(long v, StringBuffer b, FieldPosition f) { return null; }
             @Override
             public Number parse(String s, ParsePosition p) { return null; }
-        };
+        }
 
         checkXLogScale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mainSeries.resetCache();
                 if (isChecked) {
                     minX = logScale(minX);
                     maxX = logScale(maxX);
+                    if (Double.isNaN(minX) || Double.isNaN(maxX)
+                            || Double.isInfinite(minX) || Double.isInfinite(maxX)) {
+                        minX = logScale(Math.pow(10, -14.0));
+                        maxX = 0.0;
+                    }
                 } else {
                     minX = logScaleRecover(minX);
                     maxX = logScaleRecover(maxX);
                 }
-                mainSeries.setBound(minX, maxX);
-                plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
-                plot.redraw();
+
+                mainSeries.resetCache();
+                updatePlotBound();
             }
         });
 
@@ -110,8 +114,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mainSeries.resetCache();
-                mainSeries.setBound(minX, maxX);
-                plot.redraw();
+                updatePlotBound();
             }
         });
 
@@ -131,13 +134,14 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.setRangeValueFormat(new CustomFormat() {
             @Override
             public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
-                double output = checkYLogScale.isChecked() ? logScaleRecover(value) : value;
+                double output = checkYLogScale.isChecked() ? log1pScaleRecover(value) : value;
                 return new StringBuffer(String.format("%6.4g", output));
             }
         });
 
         plot.getLegendWidget().setVisible(false);
         plot.getTitleWidget().setVisible(false);
+        plot.centerOnRangeOrigin(0.0);
 
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
@@ -148,21 +152,26 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 right.setVariable(variable, x);
 
                 double y = left.getValue() - right.getValue();
-                return checkYLogScale.isChecked() ? logScale(y) : y;
+                return checkYLogScale.isChecked() ? log1pScale(y) : y;
             }
         }, 500);
-        mainSeries.setBound(lowerBound, upperBound);
-
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
-        plot.calculateMinMaxVals();
-        plot.centerOnRangeOrigin(0.0);
 
-        minX = plot.getCalculatedMinX().doubleValue();
-        maxX = plot.getCalculatedMaxX().doubleValue();
+        minX = lowerBound;
+        maxX = upperBound;
 
-        textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
-        textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
+        updatePlotBound();
+    }
 
+    private void updatePlotBound() {
+        double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
+        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+
+        textLowerBound.setText(String.format(getString(R.string.format_bound), rminX));
+        textUpperBound.setText(String.format(getString(R.string.format_bound), rmaxX));
+
+        mainSeries.setBound(minX, maxX);
+        plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
         plot.redraw();
     }
 
@@ -203,11 +212,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     zoom(oldDist / distBetweenFingers);
                 }
 
-                textLowerBound.setText(String.format(getString(R.string.format_bound), minX));
-                textUpperBound.setText(String.format(getString(R.string.format_bound), maxX));
-
-                plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
-                plot.redraw();
+                updatePlotBound();
                 break;
         }
         return true;
@@ -223,7 +228,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         minX = Math.min(minX, mainSeries.getX(mainSeries.size() - 1).doubleValue());
         maxX = Math.max(maxX, mainSeries.getX(0).doubleValue());
-        mainSeries.setBound(minX, maxX);
     }
 
     private void scroll(double pan) {
@@ -233,7 +237,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         minX = minX + offset;
         maxX = maxX + offset;
-        mainSeries.setBound(minX, maxX);
     }
 
     private double spacing(MotionEvent event) {
@@ -242,11 +245,19 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         return Math.hypot(x, y);
     }
 
+    private static double log1pScale(double val) {
+        return Math.signum(val) * Math.log1p(Math.abs(val));
+    }
+
+    private static double log1pScaleRecover(double val) {
+        return Math.signum(val) * Math.expm1(Math.abs(val));
+    }
+
     private static double logScale(double val) {
-        return Math.signum(val) * Math.log10(Math.abs(val)+1.0);
+        return Math.log(val);
     }
 
     private static double logScaleRecover(double val) {
-        return Math.signum(val) * Math.pow(10, val-1.0);
+        return Math.exp(val);
     }
 }

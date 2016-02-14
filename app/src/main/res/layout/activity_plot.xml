@@ -89,17 +89,19 @@
             android:checked="false"
             android:layout_below="@+id/labelUpper"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            android:textSize="12sp" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Y-axis in log scale"
+            android:text="Y-axis in transformed log scale"
             android:id="@+id/checkYLogScale"
             android:checked="false"
             android:layout_below="@+id/checkXLogScale"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            android:textSize="12sp" />
 
         <LinearLayout
             android:orientation="vertical"
