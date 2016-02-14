@@ -64,8 +64,10 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             @Override
             public void onClick(View v) {
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("LOWER_BOUND", minX);
-                resultIntent.putExtra("UPPER_BOUND", maxX);
+                double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
+                double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+                resultIntent.putExtra("LOWER_BOUND", rminX);
+                resultIntent.putExtra("UPPER_BOUND", rmaxX);
                 setResult(RESULT_OK, resultIntent);
                 finish();
             }
@@ -154,7 +156,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 double y = left.getValue() - right.getValue();
                 return checkYLogScale.isChecked() ? log1pScale(y) : y;
             }
-        }, 500);
+        }, 200);
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
 
         minX = lowerBound;
