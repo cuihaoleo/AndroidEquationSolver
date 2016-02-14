@@ -41,7 +41,8 @@
             android:inputType="textNoSuggestions"
             android:singleLine="true"
             android:imeOptions="actionDone"
-            android:hint="Enter the equation here" />
+            android:hint="Enter the equation here"
+            android:background="@android:drawable/edit_text" />
     </LinearLayout>
 
     <ListView

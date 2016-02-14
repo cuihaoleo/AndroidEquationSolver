@@ -71,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
         private final static int MAX_PROGRESS = 1000;
         private static final int MAX_PARTITION = 16384;
         private static final double ACCEPT_ERROR = 1E-3;
-        private static final double ACCEPT_WIDTH = 1E-16;
 
         @Override
         protected void onPreExecute() {
@@ -86,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            SolveTask.this.cancel(false);
+                            SolveTask.this.cancel(true);
                         }
                     });
             progressDialog.show();
@@ -155,12 +154,16 @@ public class MainActivity extends AppCompatActivity {
 
             if (result == null && !isCancelled()) {
                 double mid = 0.0, y_mid = Double.POSITIVE_INFINITY;
-                while (hi - lo > ACCEPT_WIDTH) {
+                double w = hi - lo;
+                while (true) {
                     mid = (lo + hi) / 2.0;
                     y_mid = func.call(mid);
 
                     if (y_mid == 0) { break; }
                     if ((y_mid < 0) == (y_lo > 0)) { hi = mid; } else { lo = mid; }
+
+                    double nw = hi - lo;
+                    if (nw >= w) { break; } else { w = nw; }
                 }
 
                 result = y_mid < ACCEPT_ERROR ? mid : null;
@@ -195,9 +198,17 @@ public class MainActivity extends AppCompatActivity {
                         .show();
             } else {
                 double error = func.call(result);
+
+                View view = listViewIDs.getChildAt(-listViewIDs.getFirstVisiblePosition());
+                if(view != null) {
+                    TextView textViewAssignment = (TextView)view.findViewById(R.id.textViewAssignment);
+                    textViewAssignment.setText("= " + result.toString());
+                }
+
+                String resultString = String.format("Result = %.12g\nError = %.12g", result, error);
                 new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Result")
-                        .setMessage("Result = " + result.toString())
+                        .setTitle("Solution")
+                        .setMessage(resultString)
                         .setPositiveButton(android.R.string.yes, null)
                         .setIconAttribute(android.R.attr.dialogIcon)
                         .show();
@@ -401,17 +412,14 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                ExpressionEvaluator left = new ExpressionEvaluator(part[0]);
-                ExpressionEvaluator right = new ExpressionEvaluator(part[1]);
-
-                Log.d(LOG_TAG, "left part: " + part[0]);
-                Log.d(LOG_TAG, "right part: " + part[1]);
+                ExpressionEvaluator left = new ExpressionEvaluator(part[0].trim());
+                ExpressionEvaluator right = new ExpressionEvaluator(part[1].trim());
 
                 if (left.isError() || right.isError()) {
                     leftEval = rightEval = null;
                     textViewEquation.setBackgroundResource(R.color.colorRedAlert);
                 } else {
-                    textViewEquation.setBackgroundResource(android.R.color.transparent);
+                    textViewEquation.setBackgroundResource(android.R.drawable.edit_text);
 
                     leftEval = left;
                     rightEval = right;

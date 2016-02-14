@@ -9,6 +9,7 @@ import java.util.Set;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ class SettingIDAdapter extends BaseAdapter {
     private HashMap<Character, Double> calculated = null;
     private boolean allResolved = false;
     private Character variable = 'x';
+    private boolean variableChanged = true;
 
     public SettingIDAdapter(Activity activity,
                             Set<Character> id) {
@@ -62,11 +64,14 @@ class SettingIDAdapter extends BaseAdapter {
         TextView textViewCalculated = (TextView)view.findViewById(R.id.textViewCalculated);
 
         if (position == 0) {
-            textViewIDCharacter.setText(String.valueOf(variable));
-            textViewAssignment.setText("is variable.");
-            textViewCalculated.setText("Tap to change variable's ID.");
-        }
-        else {
+            if (variableChanged) {
+                textViewIDCharacter.setText(String.valueOf(variable));
+                textViewAssignment.setText("is variable.");
+                textViewCalculated.setText("Tap to change variable's ID.");
+                textViewIDCharacter.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.colorAqua));
+                variableChanged = false;
+            }
+        } else {
             char id = usedList.get(position - 1);
             ExpressionEvaluator eval = assignment.get(id);
 
@@ -76,8 +81,10 @@ class SettingIDAdapter extends BaseAdapter {
 
             Double val = calculated.get(id);
             if (val == null) {
+                view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.colorRedAlert));
                 textViewCalculated.setText("Cannot be determined yet.");
             } else {
+                view.setBackgroundColor(ContextCompat.getColor(view.getContext(), android.R.color.transparent));
                 textViewCalculated.setText(val.toString());
             }
         }
@@ -127,6 +134,7 @@ class SettingIDAdapter extends BaseAdapter {
 
     public void setVariable(char id) {
         variable = id;
+        variableChanged = true;
     }
 
     public Character getVariable() {
