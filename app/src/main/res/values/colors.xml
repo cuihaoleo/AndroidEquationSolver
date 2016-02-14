@@ -5,4 +5,6 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorRedAlert">#60FF0000</color>
     <color name="colorAqua">#7FDBFF</color>
+    <color name="colorLime">#01FF70</color>
+    <color name="colorSilver">#DDDDDD</color>
 </resources>

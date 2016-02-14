@@ -13,11 +13,13 @@ public class FunctionWrapper implements XYSeries {
         double call(double x);
     }
 
-    MathFunction function;
-    int seriesSize;
-    double upperBound = 0, lowerBound = 0;
-    double step = 0;
-    boolean allInvalid = true;
+    private MathFunction function;
+    private int seriesSize;
+    private double upperBound = 0, lowerBound = 0;
+    private double step = 0;
+    private boolean allInvalid = true;
+    private int nZero = 0;
+    private double minY, maxY;
 
     private Pair<Double,Double>[] series;
     private LinkedList<Pair<Double,Double>> seriesCache = new LinkedList<>();
@@ -39,6 +41,9 @@ public class FunctionWrapper implements XYSeries {
 
         series = new Pair[seriesSize];
         allInvalid = true;
+        nZero = 0;
+        minY = Double.POSITIVE_INFINITY;
+        maxY = Double.NEGATIVE_INFINITY;
 
         for (int i=0; i<seriesSize; i++, x+=step) {
             double lower = x - step/2.0;
@@ -60,8 +65,18 @@ public class FunctionWrapper implements XYSeries {
                 }
             }
 
-            if (allInvalid && !(Double.isNaN(cur.second) || Double.isInfinite(cur.second))) {
-                allInvalid = false;
+            double cur_y = series[i].second;
+            if (!(Double.isNaN(cur_y) || Double.isInfinite(cur_y))) {
+                if (i > 0) {
+                    double pre_y = series[i - 1].second;
+                    if (cur_y == 0 || (cur_y * pre_y < 0.0 && Math.abs(cur_y) < 1.0)) {
+                        nZero++;
+                    }
+                }
+
+                if (cur_y > maxY) { maxY = cur_y; };
+                if (cur_y < minY) { minY = cur_y; };
+                if (allInvalid) { allInvalid = false; }
             }
         }
 
@@ -80,6 +95,22 @@ public class FunctionWrapper implements XYSeries {
 
     public double getUpperBound() {
         return upperBound;
+    }
+
+    public double getMinY() {
+        return minY;
+    }
+
+    public double getMaxY() {
+        return maxY;
+    }
+
+    public double getNZero() {
+        return nZero;
+    }
+
+    public boolean isAllInvalid() {
+        return allInvalid;
     }
 
     @Override

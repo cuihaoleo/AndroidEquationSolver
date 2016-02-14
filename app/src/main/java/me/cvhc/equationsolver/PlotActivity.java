@@ -3,6 +3,7 @@ package me.cvhc.equationsolver;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -34,6 +35,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private FunctionWrapper mainSeries = null;
     private double minX;
     private double maxX;
+
+    private static double SCALE_YAXIS = 1.12;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -174,6 +177,25 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         mainSeries.setBound(minX, maxX);
         plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
+
+        double minY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMinY();
+        double maxY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMaxY();
+        double scale = SCALE_YAXIS * Math.max(Math.abs(minY), Math.abs(maxY));
+        plot.setRangeBoundaries(-scale, scale, BoundaryMode.FIXED);
+
+        if (mainSeries.isAllInvalid()) {
+            int color = ContextCompat.getColor(plot.getContext(), R.color.colorRedAlert);
+            plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
+        } else {
+            int color;
+            if (mainSeries.getNZero() > 0) {
+                color = ContextCompat.getColor(plot.getContext(), R.color.colorLime);
+            } else {
+                color = ContextCompat.getColor(plot.getContext(), R.color.colorSilver);
+            }
+            plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
+        }
+
         plot.redraw();
     }
 
@@ -225,11 +247,19 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double domainMidPoint = maxX - domainSpan / 2.0f;
         double offset = domainSpan * scale / 2.0f;
 
-        minX = domainMidPoint - offset;
-        maxX = domainMidPoint + offset;
+        double min = domainMidPoint - offset;
+        double max = domainMidPoint + offset;
 
-        minX = Math.min(minX, mainSeries.getX(mainSeries.size() - 1).doubleValue());
-        maxX = Math.max(maxX, mainSeries.getX(0).doubleValue());
+        min = Math.min(min, mainSeries.getX(mainSeries.size() - 1).doubleValue());
+        max = Math.max(max, mainSeries.getX(0).doubleValue());
+
+        double rminX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
+        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
+        if (min < max && !Double.isInfinite(rminX) && !Double.isNaN(rminX)
+                && !Double.isInfinite(rmaxX) && !Double.isNaN(rmaxX)) {
+            minX = min;
+            maxX = max;
+        }
     }
 
     private void scroll(double pan) {
@@ -237,8 +267,16 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double step = domainSpan / plot.getWidth();
         double offset = pan * step;
 
-        minX = minX + offset;
-        maxX = maxX + offset;
+        double min = minX + offset;
+        double max = maxX + offset;
+
+        double rminX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
+        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
+        if (min < max && !Double.isInfinite(rminX) && !Double.isNaN(rminX)
+                && !Double.isInfinite(rmaxX) && !Double.isNaN(rmaxX)) {
+            minX = min;
+            maxX = max;
+        }
     }
 
     private double spacing(MotionEvent event) {
