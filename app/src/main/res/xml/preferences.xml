@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="@string/pref_category_plotting">
+        <me.cvhc.equationsolver.NumberPickerPreference
+            android:key="pref_plot_samples"
+            android:summary="@string/pref_summary_plot_sampling_points"
+            android:title="@string/pref_title_plot_sampling_points"
+            android:defaultValue="200"
+            custom:min="100" custom:max="999" />
+        <me.cvhc.equationsolver.FloatSettingPreference
+            android:key="pref_default_lower_bound"
+            android:title="@string/pref_title_default_lower_bound"
+            android:singleLine="true"
+            android:defaultValue="0.0" />
+        <me.cvhc.equationsolver.FloatSettingPreference
+            android:key="pref_default_upper_bound"
+            android:title="@string/pref_title_default_upper_bound"
+            android:singleLine="true"
+            android:defaultValue="1.0" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_misc">
+        <Preference android:title="@string/pref_reset_settings"
+            android:key="pref_reset_settings" />
+    </PreferenceCategory>
+</PreferenceScreen>

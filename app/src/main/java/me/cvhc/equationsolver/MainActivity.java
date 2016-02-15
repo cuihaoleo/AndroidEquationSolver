@@ -4,12 +4,15 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -33,16 +36,15 @@ import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView textViewEquation;
-    ListView listViewIDs;
-    EditText textLower, textUpper;
-    SettingIDAdapter settingIDAdapter;
-
-    ExpressionEvaluator leftEval, rightEval;
-    HashSet<Character> usedIDs = new HashSet<>();
-
+    private TextView textViewEquation;
+    private ListView listViewIDs;
+    private EditText textLower, textUpper;
+    private SettingIDAdapter settingIDAdapter;
+    private ExpressionEvaluator leftEval, rightEval;
+    private HashSet<Character> usedIDs = new HashSet<>();
     private double lowerBound, upperBound;
-
+    private float defaultLowerBound, defaultUpperBound;
+    private SharedPreferences sharedPreferences;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private InputFilter simpleInputFilter = new InputFilter() {
@@ -244,8 +246,8 @@ public class MainActivity extends AppCompatActivity {
         String lowerString = textLower.getText().toString();
         String upperString = textUpper.getText().toString();
 
-        lower = lowerString.length() == 0 ? Double.valueOf(-1.0) : ExpressionEvaluator.eval(lowerString);
-        upper = upperString.length() == 0 ? Double.valueOf(+1.0) : ExpressionEvaluator.eval(upperString);
+        lower = lowerString.length() == 0 ? Double.valueOf(defaultLowerBound) : ExpressionEvaluator.eval(lowerString);
+        upper = upperString.length() == 0 ? Double.valueOf(defaultUpperBound) : ExpressionEvaluator.eval(upperString);
 
         if (lower == null || upper == null) {
             new AlertDialog.Builder(MainActivity.this)
@@ -267,11 +269,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        float boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+        float boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+
+        if (boundThreshold1 == boundThreshold2) {
+            // get "next" float bigger than boundThreshold1
+            long bits = Double.doubleToLongBits(boundThreshold1);
+            bits++;
+            boundThreshold2 = (float)Double.longBitsToDouble(bits);
+        }
+
+        defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
+        defaultUpperBound = Math.max(boundThreshold1, boundThreshold2);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         textLower = (EditText)findViewById(R.id.textLower);
         textUpper = (EditText)findViewById(R.id.textUpper);
+        textLower.setHint(String.valueOf(defaultLowerBound));
+        textUpper.setHint(String.valueOf(defaultUpperBound));
+
         Button buttonPlot = (Button)findViewById(R.id.buttonPlot);
         Button buttonSolve = (Button)findViewById(R.id.buttonSolve);
 
@@ -450,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings:
-                Log.d(LOG_TAG, "Now let's populate setting activity!");
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="10dp" >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal" android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number|numberSigned|numberDecimal"
+            android:ems="8"
+            android:id="@+id/editCoefficient"
+            android:layout_gravity="center_vertical"
+            android:background="@android:drawable/edit_text"
+            android:hint="0.0"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="x10"
+            android:id="@+id/textView"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:layout_marginLeft="4dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="numberSigned"
+            android:ems="4"
+            android:id="@+id/editExponent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:background="@android:drawable/edit_text"
+            android:hint="0"
+            android:singleLine="true"
+            android:layout_marginBottom="12dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/textWarning"
+        android:gravity="center"
+        android:textColor="@color/colorRedAlert"
+        android:textStyle="italic" />
+</LinearLayout>

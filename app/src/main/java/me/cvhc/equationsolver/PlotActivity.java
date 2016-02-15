@@ -1,8 +1,10 @@
 package me.cvhc.equationsolver;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -148,6 +150,9 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.getTitleWidget().setVisible(false);
         plot.centerOnRangeOrigin(0.0);
 
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int prefPlot = sharedPref.getInt("pref_plot_samples", 200);
+
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
@@ -159,7 +164,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 double y = left.getValue() - right.getValue();
                 return checkYLogScale.isChecked() ? log1pScale(y) : y;
             }
-        }, 200);
+        }, prefPlot);
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
 
         minX = lowerBound;
