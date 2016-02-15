@@ -264,12 +264,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    private void updateContent() {
+        // load default plotting boundary settings
         float boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
         float boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
 
@@ -283,16 +279,27 @@ public class MainActivity extends AppCompatActivity {
         defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
         defaultUpperBound = Math.max(boundThreshold1, boundThreshold2);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        textLower = (EditText)findViewById(R.id.textLower);
-        textUpper = (EditText)findViewById(R.id.textUpper);
+        // display lower/upper boundary in EditText views' hints
         textLower.setHint(String.valueOf(defaultLowerBound));
         textUpper.setHint(String.valueOf(defaultUpperBound));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
+
+        // initialize View objects
+        textLower = (EditText)findViewById(R.id.textLower);
+        textUpper = (EditText)findViewById(R.id.textUpper);
+        textViewEquation = (TextView) findViewById(R.id.textViewEquation);
+        listViewIDs = (ListView) findViewById(R.id.listViewVariables);
 
         Button buttonPlot = (Button)findViewById(R.id.buttonPlot);
         Button buttonSolve = (Button)findViewById(R.id.buttonSolve);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         buttonPlot.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -332,9 +339,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        textViewEquation = (TextView) findViewById(R.id.textViewEquation);
-        listViewIDs = (ListView) findViewById(R.id.listViewVariables);
 
         settingIDAdapter = new SettingIDAdapter(this, usedIDs);
         listViewIDs.setAdapter(settingIDAdapter);
@@ -457,6 +461,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        updateContent();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateContent();
     }
 
     @Override
@@ -473,7 +485,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-
         }
     }
 

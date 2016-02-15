@@ -30,13 +30,11 @@ import java.util.HashMap;
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private TextView textUpperBound, textLowerBound;
-    private Button buttonApply, buttonCancel;
     private XYPlot plot;
     private CheckBox checkXLogScale, checkYLogScale;
 
     private FunctionWrapper mainSeries = null;
-    private double minX;
-    private double maxX;
+    private double minX, maxX;
 
     private static double SCALE_YAXIS = 1.12;
 
@@ -44,27 +42,30 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
 
-        Intent intent = getIntent();
-
-        double lowerBound = intent.getDoubleExtra("LOWER_BOUND", -1.0);
-        double upperBound = intent.getDoubleExtra("UPPER_BOUND", 1.0);
-        String leftPart = intent.getStringExtra("LEFT_PART");
-        String rightPart = intent.getStringExtra("RIGHT_PART");
-        final ExpressionEvaluator left = new ExpressionEvaluator(leftPart);
-        final ExpressionEvaluator right = new ExpressionEvaluator(rightPart);
-        final Character variable = intent.getCharExtra("VARIABLE", 'x');
-
-        HashMap<Character, Double> constValues = (HashMap<Character, Double>)intent.getSerializableExtra("CONSTANT_VALUES");
-        left.updateVariables(constValues);
-        right.updateVariables(constValues);
-
+        // initialize View objects
+        Button buttonApply = (Button) findViewById(R.id.buttonApply);
+        Button buttonCancel = (Button) findViewById(R.id.buttonCancel);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
-        buttonApply = (Button)findViewById(R.id.buttonApply);
-        buttonCancel = (Button)findViewById(R.id.buttonCancel);
         checkXLogScale = (CheckBox)findViewById(R.id.checkXLogScale);
         checkYLogScale = (CheckBox)findViewById(R.id.checkYLogScale);
+        plot = (XYPlot)findViewById(R.id.plot);
 
+        // read data from Intent object
+        Intent intent = getIntent();
+
+        minX = intent.getDoubleExtra("LOWER_BOUND", -1.0);
+        maxX = intent.getDoubleExtra("UPPER_BOUND", 1.0);
+        String leftPart = intent.getStringExtra("LEFT_PART");
+        String rightPart = intent.getStringExtra("RIGHT_PART");
+        final Character variable = intent.getCharExtra("VARIABLE", 'x');
+        HashMap<Character, Double> constValues = (HashMap<Character, Double>)intent.getSerializableExtra("CONSTANT_VALUES");
+
+        // load preferences
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        int prefPlot = sharedPreferences.getInt("pref_plot_samples", 200);
+
+        // listeners
         buttonApply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,9 +126,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             }
         });
 
-        plot = (XYPlot)findViewById(R.id.plot);
+        // plot UI settings
         plot.setOnTouchListener(this);
-
         plot.setDomainStep(XYStepMode.SUBDIVIDE, 5);
         plot.setDomainValueFormat(new CustomFormat() {
             @Override
@@ -150,8 +150,12 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.getTitleWidget().setVisible(false);
         plot.centerOnRangeOrigin(0.0);
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        int prefPlot = sharedPref.getInt("pref_plot_samples", 200);
+        // construct the series to plot
+        final ExpressionEvaluator left = new ExpressionEvaluator(leftPart);
+        final ExpressionEvaluator right = new ExpressionEvaluator(rightPart);
+
+        left.updateVariables(constValues);
+        right.updateVariables(constValues);
 
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
@@ -165,11 +169,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 return checkYLogScale.isChecked() ? log1pScale(y) : y;
             }
         }, prefPlot);
+
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
-
-        minX = lowerBound;
-        maxX = upperBound;
-
         updatePlotBound();
     }
 
@@ -192,12 +193,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             int color = ContextCompat.getColor(plot.getContext(), R.color.colorRedAlert);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
         } else {
-            int color;
-            if (mainSeries.getNZero() > 0) {
-                color = ContextCompat.getColor(plot.getContext(), R.color.colorLime);
-            } else {
-                color = ContextCompat.getColor(plot.getContext(), R.color.colorSilver);
-            }
+            int color_id = mainSeries.getNZero() > 0 ? R.color.colorLime : R.color.colorSilver;
+            int color = ContextCompat.getColor(plot.getContext(), color_id);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
         }
 
@@ -290,6 +287,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         return Math.hypot(x, y);
     }
 
+    // log1p and log scale method
     private static double log1pScale(double val) {
         return Math.signum(val) * Math.log1p(Math.abs(val));
     }
