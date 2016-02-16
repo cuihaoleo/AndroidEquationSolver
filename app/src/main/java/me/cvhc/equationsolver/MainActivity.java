@@ -19,7 +19,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -420,10 +419,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (left.isError() || right.isError()) {
                     leftEval = rightEval = null;
-                    textEquation.setBackgroundResource(R.color.colorRedAlert);
+                    textEquation.setError(getString(R.string.error_illegal_expression));
                 } else {
-                    textEquation.setBackgroundResource(android.R.drawable.edit_text);
-
                     leftEval = left;
                     rightEval = right;
 
