@@ -40,7 +40,7 @@
         <EditText
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/textViewEquation"
+            android:id="@+id/textEquation"
             android:inputType="textNoSuggestions"
             android:singleLine="true"
             android:imeOptions="actionDone"
@@ -63,75 +63,81 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/relativeLayout"
-        android:layout_above="@+id/buttonSolve">
+        android:layout_alignParentBottom="true" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Range of interest"
+            android:id="@+id/textView2"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/labelROILower"
+            android:layout_below="@+id/textView2"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/border_ui"
+            android:padding="4dp"
+            android:singleLine="true"
+            android:minWidth="80dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="~"
+            android:id="@+id/textView4"
+            android:layout_below="@+id/textView2"
+            android:layout_toRightOf="@+id/labelROILower"
+            android:layout_toEndOf="@+id/labelROILower"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:layout_alignBottom="@+id/labelROIUpper" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/labelROIUpper"
+            android:layout_below="@+id/textView2"
+            android:layout_toRightOf="@+id/textView4"
+            android:layout_toEndOf="@+id/textView4"
+            android:background="@drawable/border_ui"
+            android:padding="4dp"
+            android:singleLine="true"
+            android:minWidth="80dp" />
 
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select"
+            android:text="Select ROI"
             android:id="@+id/buttonPlot"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Search from"
-            android:id="@+id/labelSearchFrom"
             android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_margin="4dp" />
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:minHeight="36dp" />
 
-        <EditText
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
-            android:singleLine="true"
-            android:inputType="textNoSuggestions"
-            android:id="@+id/textLower"
-            android:padding="2dp"
-            android:textSize="14sp"
-            android:layout_alignTop="@+id/labelSearchFrom"
-            android:layout_toRightOf="@+id/labelSearchFrom"
-            android:layout_toEndOf="@+id/labelSearchFrom"
-            android:layout_alignBottom="@+id/labelSearchFrom"
-            android:hint="-1.0" />
-
-        <TextView
+        <Button
+            style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="to"
-            android:id="@+id/labelSearchTo"
-            android:layout_below="@+id/textLower"
-            android:layout_toLeftOf="@+id/textLower"
-            android:layout_toStartOf="@+id/textLower"
-            android:layout_margin="4dp"  />
-
-        <EditText
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
-            android:singleLine="true"
-            android:inputType="textNoSuggestions"
-            android:id="@+id/textUpper"
-            android:padding="2dp"
-            android:textSize="14sp"
-            android:layout_alignTop="@+id/labelSearchTo"
-            android:layout_toRightOf="@+id/labelSearchTo"
-            android:layout_toEndOf="@+id/labelSearchTo"
-            android:layout_alignBottom="@+id/labelSearchTo"
-            android:hint="+1.0" />
+            android:text="Solve"
+            android:id="@+id/buttonSolve"
+            android:layout_below="@+id/buttonPlot"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignLeft="@+id/buttonPlot"
+            android:layout_alignStart="@+id/buttonPlot"
+            android:minHeight="36dp" />
     </RelativeLayout>
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Solve"
-        android:id="@+id/buttonSolve"
-        android:layout_alignParentBottom="true" />
 </RelativeLayout>

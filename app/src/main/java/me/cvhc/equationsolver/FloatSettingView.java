@@ -77,6 +77,13 @@ public class FloatSettingView extends FrameLayout {
         editCoefficient.setText(String.valueOf(coefficient));
     }
 
+    public void setDefaultValue(float val) {
+        int exponent = val == 0.0 ? 0 : (int)Math.log10(Math.abs(val));
+        float coefficient = val == 0.0 ? 0.0F : val / (float)Math.pow(10, exponent);
+        editExponent.setHint(String.valueOf(exponent));
+        editCoefficient.setHint(String.valueOf(coefficient));
+    }
+
     public interface OnInputValueChangedListener {
         void onInputValueChanged(float val);
     }
@@ -105,8 +112,7 @@ public class FloatSettingView extends FrameLayout {
             if (Float.isNaN(val)) {
                 textWarning.setVisibility(View.VISIBLE);
                 textWarning.setText("Invalid number format");
-
-            } else if (Math.abs(val) > mAbsMax) {
+            } else if (Math.abs(val) > mAbsMax || Float.isInfinite(val)) {
                 textWarning.setVisibility(View.VISIBLE);
                 textWarning.setText("Input number is too big");
             } else {

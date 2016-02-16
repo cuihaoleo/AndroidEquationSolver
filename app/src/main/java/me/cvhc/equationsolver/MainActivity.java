@@ -11,14 +11,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.Html;
 import android.text.InputFilter;
-import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -36,13 +37,13 @@ import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView textViewEquation;
+    private EditText textEquation;
+    private TextView labelROILower, labelROIUpper;
+    private float lowerROI, upperROI;
     private ListView listViewIDs;
-    private EditText textLower, textUpper;
     private SettingIDAdapter settingIDAdapter;
     private ExpressionEvaluator leftEval, rightEval;
     private HashSet<Character> usedIDs = new HashSet<>();
-    private double lowerBound, upperBound;
     private float defaultLowerBound, defaultUpperBound;
     private SharedPreferences sharedPreferences;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -106,13 +107,13 @@ public class MainActivity extends AppCompatActivity {
             Boolean signIsPositive = null;
             Double savedX1 = null, savedX2 = null;
             double partition = 1.0;
-            double width = upperBound - lowerBound;
+            double width = upperROI - lowerROI;
             Double result = null;
 
-            Double y1 = func.call(lowerBound);
+            Double y1 = func.call(lowerROI);
             if (!y1.isNaN()) {
                 signIsPositive = y1 > 0;
-                savedX1 = lowerBound;
+                savedX1 = (double)lowerROI;
             }
 
             while (partition <= MAX_PARTITION && savedX2 == null && result == null) {
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 publishProgress(partition / MAX_PARTITION * 0.5);
 
                 for (int i=1; i<=partition; i+=2) {
-                    double x = lowerBound + i/partition*width;
+                    double x = lowerROI + i/partition*width;
                     Double y = func.call(x);
 
                     if (y == 0) {
@@ -242,14 +243,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        Double lower, upper;
-        String lowerString = textLower.getText().toString();
-        String upperString = textUpper.getText().toString();
-
-        lower = lowerString.length() == 0 ? Double.valueOf(defaultLowerBound) : ExpressionEvaluator.eval(lowerString);
-        upper = upperString.length() == 0 ? Double.valueOf(defaultUpperBound) : ExpressionEvaluator.eval(upperString);
-
-        if (lower == null || upper == null) {
+        if (lowerROI - lowerROI != 0.0 || upperROI - upperROI != 0.0 || lowerROI >= upperROI) {
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Error")
                     .setMessage("Invalid search bound.")
@@ -259,29 +253,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        lowerBound = lower;
-        upperBound = upper;
         return true;
-    }
-
-    private void updateContent() {
-        // load default plotting boundary settings
-        float boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
-        float boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
-
-        if (boundThreshold1 == boundThreshold2) {
-            // get "next" float bigger than boundThreshold1
-            long bits = Double.doubleToLongBits(boundThreshold1);
-            bits++;
-            boundThreshold2 = (float)Double.longBitsToDouble(bits);
-        }
-
-        defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
-        defaultUpperBound = Math.max(boundThreshold1, boundThreshold2);
-
-        // display lower/upper boundary in EditText views' hints
-        textLower.setHint(String.valueOf(defaultLowerBound));
-        textUpper.setHint(String.valueOf(defaultUpperBound));
     }
 
     @Override
@@ -291,15 +263,17 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
 
         // initialize View objects
-        textLower = (EditText)findViewById(R.id.textLower);
-        textUpper = (EditText)findViewById(R.id.textUpper);
-        textViewEquation = (TextView) findViewById(R.id.textViewEquation);
+        labelROILower = (TextView)findViewById(R.id.labelROILower);
+        labelROIUpper = (TextView)findViewById(R.id.labelROIUpper);
+        textEquation = (EditText) findViewById(R.id.textEquation);
         listViewIDs = (ListView) findViewById(R.id.listViewVariables);
 
         Button buttonPlot = (Button)findViewById(R.id.buttonPlot);
         Button buttonSolve = (Button)findViewById(R.id.buttonSolve);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        reloadPreferences();
+        updateROI(defaultLowerBound, defaultUpperBound);
 
         buttonPlot.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -308,8 +282,8 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, PlotActivity.class)
                             .putExtra("LEFT_PART", leftEval.toString())
                             .putExtra("RIGHT_PART", rightEval.toString())
-                            .putExtra("LOWER_BOUND", lowerBound)
-                            .putExtra("UPPER_BOUND", upperBound)
+                            .putExtra("LOWER_BOUND", lowerROI)
+                            .putExtra("UPPER_BOUND", upperROI)
                             .putExtra("CONSTANT_VALUES", settingIDAdapter.getResolvedIDs())
                             .putExtra("VARIABLE", settingIDAdapter.getVariable());
                     startActivityForResult(intent, 0);
@@ -346,16 +320,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                final Character id = (Character)settingIDAdapter.getItem(position);
+                final Character id = (Character) settingIDAdapter.getItem(position);
                 final Character variable = settingIDAdapter.getVariable();
 
                 if (position == 0) {
                     AlertDialog.Builder selector = new AlertDialog.Builder(MainActivity.this);
 
-                    final ArrayList<Character> items= new ArrayList<>(usedIDs);
+                    final ArrayList<Character> items = new ArrayList<>(usedIDs);
                     String[] strings = new String[items.size()];
                     Collections.sort(items);
-                    for (int i=0; i<items.size(); i++) {
+                    for (int i = 0; i < items.size(); i++) {
                         strings[i] = items.get(i) + " as variable";
                     }
 
@@ -421,8 +395,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        textViewEquation.setFilters(new InputFilter[]{simpleInputFilter});
-        textViewEquation.addTextChangedListener(new TextWatcher() {
+        textEquation.setFilters(new InputFilter[]{simpleInputFilter});
+        textEquation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -446,9 +420,9 @@ public class MainActivity extends AppCompatActivity {
 
                 if (left.isError() || right.isError()) {
                     leftEval = rightEval = null;
-                    textViewEquation.setBackgroundResource(R.color.colorRedAlert);
+                    textEquation.setBackgroundResource(R.color.colorRedAlert);
                 } else {
-                    textViewEquation.setBackgroundResource(android.R.drawable.edit_text);
+                    textEquation.setBackgroundResource(android.R.drawable.edit_text);
 
                     leftEval = left;
                     rightEval = right;
@@ -462,13 +436,87 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        updateContent();
+        abstract class updateROIListener implements View.OnClickListener {
+            private String title;
+
+            public updateROIListener(String s) {
+                title = s;
+            }
+
+            abstract void updateValue(float val);
+
+            abstract float getValue();
+
+            abstract float getDefault();
+
+            @Override
+            public void onClick(View v) {
+                final TextView label = (TextView)v;
+                final FloatSettingView settingView = new FloatSettingView(MainActivity.this);
+                settingView.setInputValue(getValue());
+                settingView.setDefaultValue(getDefault());
+
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(title)
+                        .setView(settingView)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                float val = settingView.getInputValue();
+                                updateValue(settingView.getInputValue());
+                                String s = String.format(getString(R.string.format_bound), val);
+                                label.setText(s);
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null);
+
+                AlertDialog dialog = alert.create();
+                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                dialog.show();
+
+                final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                settingView.setOnInputValueChangedListener(new FloatSettingView.OnInputValueChangedListener() {
+                    @Override
+                    public void onInputValueChanged(float val) {
+                        positiveButton.setEnabled(!(Float.isNaN(val) || Float.isInfinite(val)));
+                    }
+                });
+            }
+        }
+
+        labelROILower.setOnClickListener(new updateROIListener("Lower bound of ROI") {
+            @Override float getDefault() { return defaultLowerBound; }
+            @Override void updateValue(float val) { updateROI(val, null); }
+            @Override float getValue() { return lowerROI; }
+        });
+
+        labelROIUpper.setOnClickListener(new updateROIListener("Upper bound of ROI") {
+            @Override float getDefault() { return defaultUpperBound; }
+            @Override void updateValue(float val) { updateROI(null, val); }
+            @Override float getValue() { return upperROI; }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        updateContent();
+        reloadPreferences();
+    }
+
+    private void reloadPreferences() {
+        // load default plotting boundary settings
+        float boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+        float boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+
+        if (boundThreshold1 == boundThreshold2) {
+            // get "next" float bigger than boundThreshold1
+            long bits = Double.doubleToLongBits(boundThreshold1);
+            bits++;
+            boundThreshold2 = (float)Double.longBitsToDouble(bits);
+        }
+
+        defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
+        defaultUpperBound = Math.max(boundThreshold1, boundThreshold2);
     }
 
     @Override
@@ -492,14 +540,21 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         if (resultCode == RESULT_OK) {
-            double lower = data.getDoubleExtra("LOWER_BOUND", 0.0);
-            double upper = data.getDoubleExtra("UPPER_BOUND", 0.0);
+            updateROI(
+                    (float) data.getDoubleExtra("LOWER_BOUND", 0.0),
+                    (float) data.getDoubleExtra("UPPER_BOUND", 0.0));
+        }
+    }
 
-            textLower.setText(String.format(getString(R.string.format_bound), lower));
-            textUpper.setText(String.format(getString(R.string.format_bound), upper));
+    private void updateROI(Float lower, Float upper) {
+        if (lower != null) {
+            lowerROI = lower;
+            labelROILower.setText(String.format(getString(R.string.format_bound), lower));
+        }
 
-            Log.d(LOG_TAG, "Lower bound: " + lower);
-            Log.d(LOG_TAG, "Upper bound: " + upper);
+        if (upper != null) {
+            upperROI = upper;
+            labelROIUpper.setText(String.format(getString(R.string.format_bound), upper));
         }
     }
 }
