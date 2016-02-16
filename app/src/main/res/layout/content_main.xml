@@ -125,7 +125,7 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:minHeight="36dp" />
+            android:minHeight="40dp" />
 
         <Button
             style="?android:attr/buttonStyleSmall"
@@ -138,6 +138,6 @@
             android:layout_alignParentEnd="true"
             android:layout_alignLeft="@+id/buttonPlot"
             android:layout_alignStart="@+id/buttonPlot"
-            android:minHeight="36dp" />
+            android:minHeight="40dp" />
     </RelativeLayout>
 </RelativeLayout>
