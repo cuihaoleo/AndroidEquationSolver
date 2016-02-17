@@ -54,8 +54,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         // read data from Intent object
         Intent intent = getIntent();
 
-        minX = intent.getFloatExtra("LOWER_BOUND", -1.0F);
-        maxX = intent.getFloatExtra("UPPER_BOUND", 1.0F);
+        minX = intent.getDoubleExtra("LOWER_BOUND", -1.0F);
+        maxX = intent.getDoubleExtra("UPPER_BOUND", 1.0F);
         String leftPart = intent.getStringExtra("LEFT_PART");
         String rightPart = intent.getStringExtra("RIGHT_PART");
         final Character variable = intent.getCharExtra("VARIABLE", 'x');

@@ -13,7 +13,7 @@ import android.widget.Button;
 public class FloatSettingPreference extends DialogPreference {
     private Button positiveButton;
     private float mCurrent, mAbsMax;
-    private FloatSettingView settingView;
+    private DecimalSettingView settingView;
 
     public static final float DEFAULT_VALUE = 1.0F;
 
@@ -27,15 +27,15 @@ public class FloatSettingPreference extends DialogPreference {
 
     @Override
     protected View onCreateDialogView() {
-        settingView = new FloatSettingView(getContext());
+        settingView = new DecimalSettingView(getContext());
 
         settingView.setAbsMax(mAbsMax);
         settingView.setInputValue(mCurrent);
 
-        settingView.setOnInputValueChangedListener(new FloatSettingView.OnInputValueChangedListener() {
+        settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
             @Override
-            public void onInputValueChanged(float val) {
-                positiveButton.setEnabled(!(Float.isNaN(val) || Float.isInfinite(val)));
+            public void onInputValueChanged(Number val) {
+                positiveButton.setEnabled(!(Float.isNaN(val.floatValue()) || Float.isInfinite(val.floatValue())));
             }
         });
 
@@ -52,7 +52,7 @@ public class FloatSettingPreference extends DialogPreference {
     @Override
     protected void onDialogClosed(boolean positiveResult) {
         if (positiveResult) {
-            float newValue = settingView.getInputValue();
+            float newValue = settingView.getInputValue().floatValue();
             if (callChangeListener(newValue)) {
                 mCurrent = newValue;
                 persistFloat(mCurrent);

@@ -37,12 +37,12 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText textEquation;
     private TextView labelROILower, labelROIUpper;
-    private float lowerROI, upperROI;
+    private double lowerROI, upperROI;
     private ListView listViewIDs;
     private SettingIDAdapter settingIDAdapter;
     private ExpressionEvaluator leftEval, rightEval;
     private HashSet<Character> usedIDs = new HashSet<>();
-    private float defaultLowerBound, defaultUpperBound;
+    private double defaultLowerBound, defaultUpperBound;
     private SharedPreferences sharedPreferences;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
@@ -214,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton(android.R.string.yes, null)
                         .setIconAttribute(android.R.attr.dialogIcon);
 
-                FloatSettingView displayView = new FloatSettingView(alert.getContext());
-                displayView.setInputValue(result.floatValue());
+                DecimalSettingView displayView = new DecimalSettingView(alert.getContext());
+                displayView.setInputValue(result);
                 displayView.setEditable(false);
                 displayView.setWarning(String.format("Error = " + getString(R.string.format_bound), error));
 
@@ -444,16 +444,18 @@ public class MainActivity extends AppCompatActivity {
                 title = s;
             }
 
-            abstract void updateValue(float val);
+            abstract void updateValue(double val);
 
-            abstract float getValue();
+            abstract double getValue();
 
-            abstract float getDefault();
+            abstract double getDefault();
+
+            abstract boolean testValue(double val);
 
             @Override
             public void onClick(View v) {
                 final TextView label = (TextView)v;
-                final FloatSettingView settingView = new FloatSettingView(MainActivity.this);
+                final DecimalSettingView settingView = new DecimalSettingView(MainActivity.this);
                 settingView.setInputValue(getValue());
                 settingView.setDefaultValue(getDefault());
 
@@ -463,8 +465,8 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                float val = settingView.getInputValue();
-                                updateValue(settingView.getInputValue());
+                                double val = settingView.getInputValue().doubleValue();
+                                updateValue(val);
                                 String s = String.format(getString(R.string.format_bound), val);
                                 label.setText(s);
                             }
@@ -476,25 +478,33 @@ public class MainActivity extends AppCompatActivity {
                 dialog.show();
 
                 final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                settingView.setOnInputValueChangedListener(new FloatSettingView.OnInputValueChangedListener() {
+                settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
                     @Override
-                    public void onInputValueChanged(float val) {
-                        positiveButton.setEnabled(!(Float.isNaN(val) || Float.isInfinite(val)));
+                    public void onInputValueChanged(Number number) {
+                        double val = number.doubleValue();
+                        if (testValue(val)) {
+                            positiveButton.setEnabled(!(Double.isNaN(val) || Double.isInfinite(val)));
+                        } else {
+                            settingView.setWarning("Lower bound is higher than upper bound.");
+                            positiveButton.setEnabled(false);
+                        }
                     }
                 });
             }
         }
 
         labelROILower.setOnClickListener(new updateROIListener("Lower bound of ROI") {
-            @Override float getDefault() { return defaultLowerBound; }
-            @Override void updateValue(float val) { updateROI(val, null); }
-            @Override float getValue() { return lowerROI; }
+            @Override double getDefault() { return defaultLowerBound; }
+            @Override void updateValue(double val) { updateROI(val, null); }
+            @Override double getValue() { return lowerROI; }
+            @Override boolean testValue(double val) { return val < upperROI; }
         });
 
         labelROIUpper.setOnClickListener(new updateROIListener("Upper bound of ROI") {
-            @Override float getDefault() { return defaultUpperBound; }
-            @Override void updateValue(float val) { updateROI(null, val); }
-            @Override float getValue() { return upperROI; }
+            @Override double getDefault() { return defaultUpperBound; }
+            @Override void updateValue(double val) { updateROI(null, val); }
+            @Override double getValue() { return upperROI; }
+            @Override boolean testValue(double val) { return val > lowerROI; }
         });
     }
 
@@ -506,14 +516,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void reloadPreferences() {
         // load default plotting boundary settings
-        float boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
-        float boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+        double boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+        double boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
 
         if (boundThreshold1 == boundThreshold2) {
             // get "next" float bigger than boundThreshold1
             long bits = Double.doubleToLongBits(boundThreshold1);
             bits++;
-            boundThreshold2 = (float)Double.longBitsToDouble(bits);
+            boundThreshold2 = Double.longBitsToDouble(bits);
         }
 
         defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
@@ -540,13 +550,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            updateROI(
-                    (float) data.getDoubleExtra("LOWER_BOUND", 0.0),
-                    (float) data.getDoubleExtra("UPPER_BOUND", 0.0));
+            updateROI(data.getDoubleExtra("LOWER_BOUND", 0.0), data.getDoubleExtra("UPPER_BOUND", 0.0));
         }
     }
 
-    private void updateROI(Float lower, Float upper) {
+    private void updateROI(Double lower, Double upper) {
         if (lower != null) {
             lowerROI = lower;
             labelROILower.setText(String.format(getString(R.string.format_bound), lower));
