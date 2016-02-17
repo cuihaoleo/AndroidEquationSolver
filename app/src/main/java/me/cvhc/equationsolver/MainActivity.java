@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.Html;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
@@ -47,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private InputFilter simpleInputFilter = new InputFilter() {
+    private class SimpleEquationInputFilter implements InputFilter {
         public CharSequence filter(CharSequence source, int start, int end,
                                    Spanned dest, int dstart, int dend) {
             boolean meetEqual = dest.toString().indexOf('=') != -1;
@@ -210,13 +209,18 @@ public class MainActivity extends AppCompatActivity {
                     textViewAssignment.setText("= " + result.toString());
                 }
 
-                String resultString = String.format("Result = %.12g\nError = %.12g", result, error);
-                new AlertDialog.Builder(MainActivity.this)
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this)
                         .setTitle("Solution")
-                        .setMessage(resultString)
                         .setPositiveButton(android.R.string.yes, null)
-                        .setIconAttribute(android.R.attr.dialogIcon)
-                        .show();
+                        .setIconAttribute(android.R.attr.dialogIcon);
+
+                FloatSettingView displayView = new FloatSettingView(alert.getContext());
+                displayView.setInputValue(result.floatValue());
+                displayView.setEditable(false);
+                displayView.setWarning(String.format("Error = " + getString(R.string.format_bound), error));
+
+                alert.setView(displayView);
+                alert.show();
             }
         }
     }
@@ -360,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
 
                     input.setText(exp == null ? "" : exp);
                     input.setSingleLine(true);
-                    input.setFilters(new InputFilter[]{simpleInputFilter});
+                    input.setFilters(new InputFilter[]{new SimpleEquationInputFilter()});
 
                     final AlertDialog dialog = alert.create();
 
@@ -394,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        textEquation.setFilters(new InputFilter[]{simpleInputFilter});
+        textEquation.setFilters(new InputFilter[]{new SimpleEquationInputFilter()});
         textEquation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -534,8 +538,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             updateROI(
                     (float) data.getDoubleExtra("LOWER_BOUND", 0.0),

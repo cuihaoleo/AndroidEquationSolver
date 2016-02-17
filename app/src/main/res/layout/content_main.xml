@@ -45,7 +45,8 @@
             android:singleLine="true"
             android:imeOptions="actionDone"
             android:hint="Enter the equation here"
-            android:background="@android:drawable/edit_text" />
+            android:background="@android:drawable/edit_text"
+            android:typeface="serif" />
     </LinearLayout>
 
     <ListView

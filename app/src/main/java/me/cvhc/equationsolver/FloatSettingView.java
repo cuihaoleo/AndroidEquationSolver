@@ -84,6 +84,16 @@ public class FloatSettingView extends FrameLayout {
         editCoefficient.setHint(String.valueOf(coefficient));
     }
 
+    public void setWarning(CharSequence msg) {
+        textWarning.setVisibility(View.VISIBLE);
+        textWarning.setText(msg);
+    }
+
+    public void setEditable(boolean editable) {
+        editExponent.setFocusable(editable);
+        editCoefficient.setFocusable(editable);
+    }
+
     public interface OnInputValueChangedListener {
         void onInputValueChanged(float val);
     }
