@@ -15,12 +15,10 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -355,45 +353,37 @@ public class MainActivity extends AppCompatActivity {
                     selector.setTitle("Variable of the equation");
                     selector.show();
                 } else {
-                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                    final EditText input = new EditText(MainActivity.this);
-                    String exp = settingIDAdapter.getExpression(id);
+                    final ExpressionSettingView settingView = new ExpressionSettingView(MainActivity.this);
+                    final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Setting ID")
+                            .setView(settingView)
+                            .create();
 
-                    alert.setTitle("Setting ID");
-                    alert.setView(input);
+                    settingView.setPrefixText(id + " = ");
+                    settingView.setText(settingIDAdapter.getExpression(id));
 
-                    input.setText(exp == null ? "" : exp);
-                    input.setSingleLine(true);
-                    input.setFilters(new InputFilter[]{new SimpleEquationInputFilter()});
-
-                    final AlertDialog dialog = alert.create();
-
-                    input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    settingView.setNegativeButtonListener(new View.OnClickListener() {
                         @Override
-                        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                                ExpressionEvaluator eval;
-                                eval = new ExpressionEvaluator(input.getText().toString());
-                                if (eval.isError()) {
-                                    Toast.makeText(MainActivity.this, R.string.error_illegal_expression, Toast.LENGTH_SHORT).show();
-                                    return true;
-                                } else {
-                                    settingIDAdapter.assignID(id, eval);
-                                    settingIDAdapter.notifyDataSetChanged();
-                                    Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
-                                    dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
-                                    dialog.dismiss();
-                                    return false;
-                                }
-                            } else {
-                                return false;
-                            }
+                        public void onClick(View v) {
+                            dialog.dismiss();
                         }
-
                     });
 
-                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                    settingView.setPositiveButtonListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            ExpressionEvaluator eval = settingView.getExpression();
+                            if (eval != null) {
+                                settingIDAdapter.assignID(id, eval);
+                                settingIDAdapter.notifyDataSetChanged();
+                                Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
+                            }
+                            dialog.dismiss();
+                        }
+                    });
+
                     dialog.show();
+                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
                 }
             }
         });
