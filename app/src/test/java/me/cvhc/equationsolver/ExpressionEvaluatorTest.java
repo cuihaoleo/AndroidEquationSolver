@@ -13,6 +13,21 @@ public class ExpressionEvaluatorTest {
     }
 
     @Test
+    public void testGetValue2() throws Exception {
+        ExpressionEvaluator eval = new ExpressionEvaluator("2x^2(0.5)");
+        eval.setVariable('x', 2.0);
+        Double result = eval.getValue();
+        assertEquals(Double.valueOf(4.0), result);
+    }
+
+    @Test
+    public void testGetValue3() throws Exception {
+        ExpressionEvaluator eval = new ExpressionEvaluator("-1--1.0e-1");
+        Double result = eval.getValue();
+        assertEquals(Double.valueOf(-0.9), result);
+    }
+
+    @Test
     public void testError() throws Exception {
         ExpressionEvaluator eval = new ExpressionEvaluator("1.2+");
         assertTrue(eval.isError());

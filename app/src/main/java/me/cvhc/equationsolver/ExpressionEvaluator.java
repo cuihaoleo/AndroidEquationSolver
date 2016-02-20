@@ -184,12 +184,31 @@ public class ExpressionEvaluator {
         }
 
         @Override
-        public PropertyStruct visitImplicitMultiply(ExpressionParser.ImplicitMultiplyContext ctx) {
+        public PropertyStruct visitPowerOp(ExpressionParser.PowerOpContext ctx) {
             PropertyStruct prop = NodeProperty.get(ctx);
             if (prop != null && CachedVariables.containsAll(prop.Variables))
                 return prop;
 
             PropertyStruct left = visit(ctx.atom());
+            PropertyStruct right = visit(ctx.power());
+            PropertyStruct current = new PropertyStruct();
+
+            current.Determined = left.Determined && right.Determined;
+            current.Variables = new HashSet<>(left.Variables);
+            current.Variables.addAll(right.Variables);
+            current.Value = current.Determined ? Math.pow(left.Value, right.Value) : 0.0;
+
+            NodeProperty.put(ctx, current);
+            return current;
+        }
+
+        @Override
+        public PropertyStruct visitImplicitMultiply(ExpressionParser.ImplicitMultiplyContext ctx) {
+            PropertyStruct prop = NodeProperty.get(ctx);
+            if (prop != null && CachedVariables.containsAll(prop.Variables))
+                return prop;
+
+            PropertyStruct left = visit(ctx.power());
             PropertyStruct right = visit(ctx.factor());
             PropertyStruct current = new PropertyStruct();
 

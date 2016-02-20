@@ -1,16 +1,20 @@
 grammar Expression;
 
 expr
-    : <assoc=right> expr op=EXP expr  # BinaryOp
-    | expr op=(MUL|DIV) expr  # BinaryOp
+    : expr op=(MUL|DIV) expr  # BinaryOp
     | expr op=(ADD|SUB) expr  # BinaryOp
     | op=(ADD|SUB) factor  # UnaryOp
     | factor  # ToFactor
     ;
 
 factor
-    : atom factor  # ImplicitMultiply
-    | atom  # ToAtom
+    : power factor  # ImplicitMultiply
+    | power  # ToPower
+    ;
+
+power
+    : <assoc=right> atom op=EXP power  # PowerOp
+    | atom # ToAtom
     ;
 
 atom
