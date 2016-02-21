@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
         if (!settingIDAdapter.resolveIDs()) {
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Error")
-                    .setMessage("Some constants cannot be determined yet.")
+                    .setMessage(R.string.indeterminate_constants)
                     .setPositiveButton(android.R.string.yes, null)
                     .setIconAttribute(android.R.attr.alertDialogIcon)
                     .show();

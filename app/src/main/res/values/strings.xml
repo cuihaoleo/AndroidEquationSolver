@@ -14,4 +14,5 @@
     <string name="pref_category_misc">Miscellaneous</string>
     <string name="pref_reset_settings">Reset settings to default</string>
     <string name="error_invalid_equation">Invalid equation</string>
+    <string name="indeterminate_constants">Some constants cannot be determined yet.</string>
 </resources>
