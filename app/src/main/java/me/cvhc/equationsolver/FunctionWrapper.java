@@ -105,7 +105,7 @@ public class FunctionWrapper implements XYSeries {
         return maxY;
     }
 
-    public double getNZero() {
+    public int getNZero() {
         return nZero;
     }
 

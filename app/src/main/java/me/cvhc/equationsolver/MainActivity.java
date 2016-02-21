@@ -317,6 +317,20 @@ public class MainActivity extends AppCompatActivity {
 
         settingIDAdapter = new SettingIDAdapter(this, usedIDs);
         listViewIDs.setAdapter(settingIDAdapter);
+
+        listViewIDs.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0) {
+                    Character idChar = (Character) settingIDAdapter.getItem(position);
+                    settingIDAdapter.assignID(idChar, null);
+                    settingIDAdapter.notifyDataSetChanged();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         listViewIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -401,10 +415,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 String eq = s.toString();
-                String[] part = eq.split("=", 2);
+                if (eq.length() == 0) {
+                    textEquation.setError(null);
+                    return;
+                }
 
+                String[] part = eq.split("=", 2);
                 Log.d(LOG_TAG, "Equation: " + eq);
                 if (part.length != 2) {
+                    textEquation.setError(getString(R.string.error_invalid_equation));
                     return;
                 }
 

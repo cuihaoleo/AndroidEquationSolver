@@ -1,5 +1,7 @@
 package me.cvhc.equationsolver;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -16,6 +18,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import com.androidplot.Plot;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlot;
@@ -30,11 +33,13 @@ import java.util.HashMap;
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private TextView textUpperBound, textLowerBound;
+    private TextView textLargeWarning;
     private XYPlot plot;
     private CheckBox checkXLogScale, checkYLogScale;
 
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
+    private int nZero = 0;
 
     private static double SCALE_YAXIS = 1.12;
 
@@ -47,6 +52,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         Button buttonCancel = (Button) findViewById(R.id.buttonCancel);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
+        textLargeWarning = (TextView)findViewById(R.id.textLargeWarning);
         checkXLogScale = (CheckBox)findViewById(R.id.checkXLogScale);
         checkYLogScale = (CheckBox)findViewById(R.id.checkYLogScale);
         plot = (XYPlot)findViewById(R.id.plot);
@@ -69,13 +75,29 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         buttonApply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent resultIntent = new Intent();
-                double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
-                double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
-                resultIntent.putExtra("LOWER_BOUND", rminX);
-                resultIntent.putExtra("UPPER_BOUND", rmaxX);
-                setResult(RESULT_OK, resultIntent);
-                finish();
+                String warning = null;
+                if (nZero == 0) {
+                    warning = "Probably no zero point in select range.";
+                } else if (nZero > 1) {
+                    warning = "It seems there are multiple zero points in select range.";
+                }
+
+                if (warning != null) {
+                    new AlertDialog.Builder(PlotActivity.this)
+                            .setTitle(android.R.string.dialog_alert_title)
+                            .setMessage(warning)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    submitSelectRange();
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, null)
+                            .setIconAttribute(android.R.attr.alertDialogIcon)
+                            .show();
+                } else {
+                    submitSelectRange();
+                }
             }
         });
 
@@ -174,6 +196,16 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         updatePlotBound();
     }
 
+    private void submitSelectRange() {
+        Intent resultIntent = new Intent();
+        double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
+        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+        resultIntent.putExtra("LOWER_BOUND", rminX);
+        resultIntent.putExtra("UPPER_BOUND", rmaxX);
+        setResult(RESULT_OK, resultIntent);
+        finish();
+    }
+
     private void updatePlotBound() {
         double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
         double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
@@ -187,15 +219,20 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double minY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMinY();
         double maxY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMaxY();
         double scale = SCALE_YAXIS * Math.max(Math.abs(minY), Math.abs(maxY));
+
+        nZero = mainSeries.getNZero();
         plot.setRangeBoundaries(-scale, scale, BoundaryMode.FIXED);
 
         if (mainSeries.isAllInvalid()) {
             int color = ContextCompat.getColor(plot.getContext(), R.color.colorRedAlert);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
+            textLargeWarning.setVisibility(View.VISIBLE);
+            textLargeWarning.setText("No valid value in this range.");
         } else {
-            int color_id = mainSeries.getNZero() > 0 ? R.color.colorLime : R.color.colorSilver;
+            int color_id = nZero > 0 ? R.color.colorLime : R.color.colorSilver;
             int color = ContextCompat.getColor(plot.getContext(), color_id);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
+            textLargeWarning.setVisibility(View.INVISIBLE);
         }
 
         plot.redraw();

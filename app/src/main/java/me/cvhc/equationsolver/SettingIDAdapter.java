@@ -69,6 +69,7 @@ class SettingIDAdapter extends BaseAdapter {
                 textViewAssignment.setText("is variable.");
                 textViewCalculated.setText("Tap to change variable's ID.");
                 textViewIDCharacter.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.colorAqua));
+                view.setBackgroundColor(ContextCompat.getColor(view.getContext(), android.R.color.transparent));
                 variableChanged = false;
             }
         } else {
@@ -77,6 +78,7 @@ class SettingIDAdapter extends BaseAdapter {
 
             resolveIDs();
             textViewIDCharacter.setText("" + id);
+            textViewIDCharacter.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.colorSilver));
             textViewAssignment.setText("= " + eval);
 
             Double val = calculated.get(id);
@@ -125,7 +127,11 @@ class SettingIDAdapter extends BaseAdapter {
     }
 
     public void assignID(char id, ExpressionEvaluator eval) {
-        assignment.put(id, eval);
+        if (eval != null) {
+            assignment.put(id, eval);
+        } else {
+            assignment.remove(id);
+        }
     }
 
     public String getExpression(char id) {
