@@ -56,8 +56,9 @@ class SettingIDAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        if (convertView == null)
-            view = inflater.inflate(R.layout.list_view_setting_id, null);
+        if (convertView == null) {
+            view = inflater.inflate(R.layout.list_view_setting_id, parent, false);
+        }
 
         TextView textViewIDCharacter = (TextView)view.findViewById(R.id.textViewIDCharacter);
         TextView textViewAssignment = (TextView)view.findViewById(R.id.textViewAssignment);

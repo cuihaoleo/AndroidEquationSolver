@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
-    };
+    }
 
     private class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, Double> {
         private ProgressDialog progressDialog;
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
             Double y1 = func.call(lowerROI);
             if (!y1.isNaN()) {
                 signIsPositive = y1 > 0;
-                savedX1 = (double)lowerROI;
+                savedX1 = lowerROI;
             }
 
             while (partition <= MAX_PARTITION && savedX2 == null && result == null) {
@@ -193,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (result == null) {
                 new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Result")
-                        .setMessage("No result")
+                        .setTitle(R.string.result)
+                        .setMessage(R.string.no_result)
                         .setPositiveButton(android.R.string.yes, null)
                         .setIconAttribute(android.R.attr.alertDialogIcon)
                         .show();
@@ -204,11 +204,11 @@ public class MainActivity extends AppCompatActivity {
                 View view = listViewIDs.getChildAt(-listViewIDs.getFirstVisiblePosition());
                 if(view != null) {
                     TextView textViewAssignment = (TextView)view.findViewById(R.id.textViewAssignment);
-                    textViewAssignment.setText("= " + result.toString());
+                    textViewAssignment.setText(String.format("= %s", result.toString()));
                 }
 
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Solution")
+                        .setTitle(R.string.solution)
                         .setPositiveButton(android.R.string.yes, null)
                         .setIconAttribute(android.R.attr.dialogIcon);
 
@@ -226,8 +226,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean prepareEquation() {
         if (leftEval == null || rightEval == null) {
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Error")
-                    .setMessage("The input equation is invalid.")
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.error_invalid_equation)
                     .setPositiveButton(android.R.string.yes, null)
                     .setIconAttribute(android.R.attr.alertDialogIcon)
                     .show();
@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (!settingIDAdapter.resolveIDs()) {
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Error")
+                    .setTitle(R.string.error)
                     .setMessage(R.string.indeterminate_constants)
                     .setPositiveButton(android.R.string.yes, null)
                     .setIconAttribute(android.R.attr.alertDialogIcon)
@@ -246,8 +246,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (lowerROI - lowerROI != 0.0 || upperROI - upperROI != 0.0 || lowerROI >= upperROI) {
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Error")
-                    .setMessage("Invalid search bound.")
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.invalid_search_range)
                     .setPositiveButton(android.R.string.yes, null)
                     .setIconAttribute(android.R.attr.alertDialogIcon)
                     .show();
@@ -364,12 +364,12 @@ public class MainActivity extends AppCompatActivity {
 
                     });
 
-                    selector.setTitle("Variable of the equation");
+                    selector.setTitle(R.string.choose_variable_id);
                     selector.show();
                 } else {
                     final ExpressionSettingView settingView = new ExpressionSettingView(MainActivity.this);
                     final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Setting ID")
+                            .setTitle(R.string.setting_id)
                             .setView(settingView)
                             .create();
 
@@ -494,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
                         if (testValue(val)) {
                             positiveButton.setEnabled(!(Double.isNaN(val) || Double.isInfinite(val)));
                         } else {
-                            settingView.setWarning("Lower bound is higher than upper bound.");
+                            settingView.setWarning(getString(R.string.error_lower_bound_higher_than_upper_bound));
                             positiveButton.setEnabled(false);
                         }
                     }
@@ -502,14 +502,14 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        labelROILower.setOnClickListener(new updateROIListener("Lower bound of ROI") {
+        labelROILower.setOnClickListener(new updateROIListener(getString(R.string.lower_bound_of_roi)) {
             @Override double getDefault() { return defaultLowerBound; }
             @Override void updateValue(double val) { updateROI(val, null); }
             @Override double getValue() { return lowerROI; }
             @Override boolean testValue(double val) { return val < upperROI; }
         });
 
-        labelROIUpper.setOnClickListener(new updateROIListener("Upper bound of ROI") {
+        labelROIUpper.setOnClickListener(new updateROIListener(getString(R.string.upper_bound_of_roi)) {
             @Override double getDefault() { return defaultUpperBound; }
             @Override void updateValue(double val) { updateROI(null, val); }
             @Override double getValue() { return upperROI; }

@@ -15,4 +15,14 @@
     <string name="pref_reset_settings">Reset settings to default</string>
     <string name="error_invalid_equation">Invalid equation</string>
     <string name="indeterminate_constants">Some constants cannot be determined yet.</string>
+    <string name="error">Error</string>
+    <string name="invalid_search_range">Invalid search range.</string>
+    <string name="result">Result</string>
+    <string name="no_result">No result.</string>
+    <string name="solution">Solution</string>
+    <string name="choose_variable_id">Choose variable ID</string>
+    <string name="setting_id">Setting ID</string>
+    <string name="error_lower_bound_higher_than_upper_bound">Lower bound is higher than upper bound.</string>
+    <string name="lower_bound_of_roi">Lower bound of ROI</string>
+    <string name="upper_bound_of_roi">Upper bound of ROI</string>
 </resources>
