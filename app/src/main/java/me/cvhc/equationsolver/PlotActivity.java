@@ -16,6 +16,7 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.androidplot.Plot;
@@ -36,6 +37,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private TextView textLargeWarning;
     private XYPlot plot;
     private CheckBox checkXLogScale, checkYLogScale;
+    SharedPreferences sharedPreferences;
 
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
@@ -49,7 +51,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         // initialize View objects
         Button buttonApply = (Button) findViewById(R.id.buttonApply);
-        Button buttonCancel = (Button) findViewById(R.id.buttonCancel);
+        ImageButton buttonReset = (ImageButton)findViewById(R.id.buttonReset);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
         textLargeWarning = (TextView)findViewById(R.id.textLargeWarning);
@@ -68,7 +70,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         HashMap<Character, Double> constValues = (HashMap<Character, Double>)intent.getSerializableExtra("CONSTANT_VALUES");
 
         // load preferences
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int prefPlot = sharedPreferences.getInt("pref_plot_samples", 200);
 
         // listeners
@@ -101,12 +103,22 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             }
         });
 
-        buttonCancel.setOnClickListener(new View.OnClickListener() {
+        buttonReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent resultIntent = new Intent();
-                setResult(RESULT_CANCELED, resultIntent);
-                finish();
+                float min = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+                float max = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+
+                minX = checkXLogScale.isChecked() ? logScale(min) : min;
+                maxX = checkXLogScale.isChecked() ? logScale(max) : min;
+
+                if (minX >= maxX || Double.isInfinite(minX) || Double.isNaN(minX)
+                        || Double.isInfinite(maxX) || Double.isNaN(maxX)) {
+                    minX = checkXLogScale.isChecked() ? logScale(1e-14) : 0.0;
+                    maxX = checkXLogScale.isChecked() ? 0.0 : 1.0;
+                }
+
+                updatePlotBound();
             }
         });
 
@@ -224,12 +236,12 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.setRangeBoundaries(-scale, scale, BoundaryMode.FIXED);
 
         if (mainSeries.isAllInvalid()) {
-            int color = ContextCompat.getColor(plot.getContext(), R.color.colorRedAlert);
+            int color = ContextCompat.getColor(plot.getContext(), R.color.colorProhibition);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
             textLargeWarning.setVisibility(View.VISIBLE);
             textLargeWarning.setText("No valid value in this range.");
         } else {
-            int color_id = nZero > 0 ? R.color.colorLime : R.color.colorSilver;
+            int color_id = nZero > 0 ? R.color.colorPermission : R.color.colorProhibition;
             int color = ContextCompat.getColor(plot.getContext(), color_id);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
             textLargeWarning.setVisibility(View.INVISIBLE);

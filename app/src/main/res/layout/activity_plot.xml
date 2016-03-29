@@ -9,6 +9,78 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="me.cvhc.equationsolver.PlotActivity">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/relativeLayout3"
+        android:layout_toLeftOf="@+id/buttonReset"
+        android:layout_toStartOf="@+id/buttonReset">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="MinX ="
+            android:id="@+id/textView2"
+            android:textStyle="bold"
+            android:layout_gravity="end"
+            android:layout_alignRight="@+id/textView6"
+            android:layout_alignEnd="@+id/textView6"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:paddingRight="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="1.23456"
+            android:id="@+id/textLowerBound"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/border_ui"
+            android:layout_alignBottom="@+id/textView2"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:typeface="monospace"
+            android:layout_toRightOf="@+id/textView2"
+            android:layout_toEndOf="@+id/textView2" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="MaxX ="
+            android:id="@+id/textView6"
+            android:layout_below="@+id/textView2"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:textStyle="bold"
+            android:layout_gravity="end"
+            android:paddingRight="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.34567"
+            android:id="@+id/textUpperBound"
+            android:layout_below="@+id/textView2"
+            android:layout_toRightOf="@+id/textView2"
+            android:background="@drawable/border_ui"
+            android:layout_alignBottom="@+id/textView6"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:typeface="monospace" />
+
+    </RelativeLayout>
+
     <com.androidplot.xy.XYPlot
         style="@style/simple_xy"
         android:id="@+id/plot"
@@ -16,7 +88,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_above="@+id/relativeLayout2"
-        android:layout_below="@+id/textView3" />
+        android:layout_below="@+id/relativeLayout3" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -26,72 +98,16 @@
         android:layout_alignParentStart="true"
         android:id="@+id/relativeLayout2">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Lower"
-            android:id="@+id/labelLower"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:paddingLeft="4dp"
-            android:paddingTop="2dp"
-            android:paddingRight="4dp"
-            android:paddingBottom="2dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Upper"
-            android:id="@+id/labelUpper"
-            android:layout_below="@+id/labelLower"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/labelLower"
-            android:layout_alignEnd="@+id/labelLower"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:paddingRight="4dp"
-            android:paddingLeft="4dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="0.0000"
-            android:id="@+id/textLowerBound"
-            android:gravity="center_vertical"
-            android:textStyle="bold"
-            android:layout_alignParentTop="true"
-            android:layout_toRightOf="@+id/labelLower"
-            android:layout_toEndOf="@+id/labelLower"
-            android:layout_above="@+id/labelUpper" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="0.0000"
-            android:id="@+id/textUpperBound"
-            android:gravity="center_vertical"
-            android:textStyle="bold"
-            android:layout_below="@+id/textLowerBound"
-            android:layout_toEndOf="@+id/labelUpper"
-            android:layout_toRightOf="@+id/labelUpper"
-            android:layout_alignBottom="@+id/labelUpper" />
-
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="X-axis in log scale"
             android:id="@+id/checkXLogScale"
             android:checked="false"
-            android:layout_below="@+id/labelUpper"
+            android:textSize="12sp"
+            android:layout_below="@+id/textView3"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:textSize="12sp" />
+            android:layout_alignParentStart="true" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -104,42 +120,29 @@
             android:layout_alignParentStart="true"
             android:textSize="12sp" />
 
-        <LinearLayout
-            android:orientation="vertical"
+        <Button
+            style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/linearLayout3"
-            android:layout_alignBottom="@+id/checkYLogScale"
+            android:text="Submit"
+            android:id="@+id/buttonApply"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true">
+            android:layout_alignParentEnd="true"
+            android:layout_alignBottom="@+id/checkYLogScale" />
 
-            <Button
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:text="@android:string/ok"
-                android:id="@+id/buttonApply" />
-
-            <Button
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:text="@android:string/cancel"
-                android:id="@+id/buttonCancel" />
-        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Drag/zoom to find an intersection with X-axis."
+            android:id="@+id/textView3"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignRight="@+id/buttonApply"
+            android:layout_alignEnd="@+id/buttonApply"
+            android:gravity="center" />
     </RelativeLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Drag/zoom to find an intersection with X-axis."
-        android:id="@+id/textView3"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -156,5 +159,15 @@
         android:layout_marginLeft="50dp"
         android:layout_marginRight="40dp"
         android:singleLine="false" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonReset"
+        android:src="@android:drawable/ic_menu_rotate"
+        android:layout_above="@+id/plot"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true" />
 
 </RelativeLayout>

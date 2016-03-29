@@ -7,4 +7,7 @@
     <color name="colorAqua">#7FDBFF</color>
     <color name="colorLime">#01FF70</color>
     <color name="colorSilver">#DDDDDD</color>
+
+    <color name="colorProhibition">#FFCCCC</color>
+    <color name="colorPermission">#CCFFCC</color>
 </resources>
