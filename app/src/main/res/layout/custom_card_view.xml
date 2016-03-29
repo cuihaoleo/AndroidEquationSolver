@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/layoutCard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/checkActivate"
+        android:layout_toStartOf="@+id/checkActivate"
+        android:padding="6dp"
+        android:id="@+id/relativeLayout">
+
+        <TextView
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:id="@+id/infoText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="> "
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:typeface="monospace"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:textStyle="bold" />
+
+        <EditText
+            android:layout_width ="match_parent"
+            android:layout_height ="wrap_content"
+            android:singleLine="true"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:maxLines ="4"
+            android:maxLength ="2000"
+            android:scrollHorizontally="false"
+            android:id="@+id/editExpression"
+            android:typeface="monospace"
+            android:background="@android:color/transparent"
+            android:imeOptions="actionDone"
+            android:ellipsize="none"
+            android:hint="Input the expression."
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/infoText"
+            android:layout_toEndOf="@+id/infoText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:visibility="gone"
+            android:id="@+id/labelSubtext"
+            android:layout_below="@+id/editExpression"
+            android:layout_toRightOf="@+id/infoText"
+            android:layout_toEndOf="@+id/infoText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/labelWarningMessage"
+            android:layout_below="@+id/labelSubtext"
+            android:layout_toRightOf="@+id/infoText"
+            android:layout_toEndOf="@+id/infoText"
+            android:visibility="gone"
+            android:textColor="@color/colorRedAlert" />
+    </RelativeLayout>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/checkActivate"
+        android:layout_alignTop="@+id/relativeLayout"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:checked="false"
+        android:layout_alignBottom="@+id/relativeLayout" />
+
+</RelativeLayout>
