@@ -196,7 +196,12 @@ public class ExpressionEvaluator {
             current.Determined = left.Determined && right.Determined;
             current.Variables = new HashSet<>(left.Variables);
             current.Variables.addAll(right.Variables);
-            current.Value = current.Determined ? Math.pow(left.Value, right.Value) : 0.0;
+
+            if (ctx.op.getType() == ExpressionParser.EXP) {
+                current.Value = current.Determined ? Math.pow(left.Value, right.Value) : 0.0;
+            } else {
+                current.Value = current.Determined ? Math.pow(left.Value, -right.Value) : 0.0;
+            }
 
             NodeProperty.put(ctx, current);
             return current;

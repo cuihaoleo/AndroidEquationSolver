@@ -13,7 +13,7 @@ factor
     ;
 
 power
-    : <assoc=right> atom op=EXP power  # PowerOp
+    : <assoc=right> atom op=(EXP|EXPN) power  # PowerOp
     | atom # ToAtom
     ;
 
@@ -29,6 +29,7 @@ SUB : '-';
 MUL : '*';
 DIV : '/';
 EXP : '^';
+EXPN : '^-';
 
 F_ABS: 'abs';
 F_SQRT: 'sqrt';
