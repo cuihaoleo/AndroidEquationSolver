@@ -15,7 +15,7 @@ public class ExpressionRenderer {
     private boolean mErrorFlag = false;
     private String mString;
     private String mColoredHtml;
-    private ExpressionParser.ExprContext mASTree;
+    private ExpressionParser.ExpressionContext mASTree;
 
     public ExpressionRenderer(String exp) throws Exception {
         ExpressionLexer lexer = new ExpressionLexer(new ANTLRInputStream(exp));
@@ -49,7 +49,7 @@ public class ExpressionRenderer {
 
         if (mErrorFlag) { throw new Exception(); }
 
-        mASTree = parser.expr();
+        mASTree = parser.expression();
         mDepends = new HashSet<>();
         ColorfulVisitor visitor = new ColorfulVisitor();
         mColoredHtml = visitor.visit(mASTree);
@@ -61,7 +61,7 @@ public class ExpressionRenderer {
         return mDepends;
     }
 
-    public final ExpressionParser.ExprContext getASTree() {
+    public final ExpressionParser.ExpressionContext getASTree() {
         return mASTree;
     }
 
@@ -81,46 +81,94 @@ public class ExpressionRenderer {
             return "";
         }
 
-        @Override
-        public String visitUnaryOp(ExpressionParser.UnaryOpContext ctx) {
-            return ops(ctx.op.getText()) + visit(ctx.factor());
+        private String parseBinaryOperator(String left, String op, String right) {
+            switch (op) {
+                case "+":
+                case "-":
+                    return left + " " + ops(op) + " " + right;
+                case "*":
+                case "/":
+                    return left + ops(op) + right;
+                case "^":
+                    return left + sup(right);
+                case "^-":
+                    return left + sup(ops("-") + right);
+                case " ":
+                    return left + right;
+                default:
+                    throw new RuntimeException();
+            }
+        }
+
+        private String parseUnaryOperator(String op, String right) {
+            return ops(op) + right;
         }
 
         @Override
-        public String visitBinaryOp(ExpressionParser.BinaryOpContext ctx) {
-            String op = ctx.op.getText();
-
-            if (op.equals("*")) {
-                op = "&times;";
+        public String visitBinaryOperatorL2(ExpressionParser.BinaryOperatorL2Context ctx) {
+            if (ctx.getChildCount() == 3) {
+                return parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        ctx.getChild(1).getText(),
+                        visit(ctx.getChild(2)));
+            } else {
+                return super.visitBinaryOperatorL2(ctx);
             }
+        }
 
-            return visit(ctx.expr(0))
-                    + ops(ctx.op.getText())
-                    + visit(ctx.expr(1));
+        @Override
+        public String visitBinaryOperatorL1(ExpressionParser.BinaryOperatorL1Context ctx) {
+            if (ctx.getChildCount() == 3) {
+                return parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        ctx.getChild(1).getText(),
+                        visit(ctx.getChild(2)));
+            } else {
+                return super.visitBinaryOperatorL1(ctx);
+            }
+        }
+
+        @Override
+        public String visitUnaryOperator(ExpressionParser.UnaryOperatorContext ctx) {
+            if (ctx.getChildCount() == 2) {
+                return parseUnaryOperator(
+                        ctx.getChild(0).getText(),
+                        visit(ctx.getChild(1)));
+            } else {
+                return super.visitUnaryOperator(ctx);
+            }
         }
 
         @Override
         public String visitImplicitMultiply(ExpressionParser.ImplicitMultiplyContext ctx) {
-            ExpressionParser.PowerContext power = ctx.power();
-            ExpressionParser.FactorContext factor = ctx.factor();
-
-            if (!Character.isDigit(factor.getText().charAt(0))) {
-                return visit(power) + visit(factor);
+            if (ctx.getChildCount() == 2) {
+                return parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        " ",
+                        visit(ctx.getChild(1)));
             } else {
-                return visit(power) + "&times;" + visit(factor);
+                return super.visitImplicitMultiply(ctx);
             }
         }
 
         @Override
-        public String visitPowerOp(ExpressionParser.PowerOpContext ctx) {
-            ExpressionParser.AtomContext atom = ctx.atom();
-            String prefix = ops(ctx.op.getType() == ExpressionParser.EXP ? "" : "-");
+        public String visitPowerOperator(ExpressionParser.PowerOperatorContext ctx) {
+            if (ctx.getChildCount() == 3) {
+                String left = ctx.getChild(0).getText();
 
-            if (atom.getText().matches("([0-9]+|[0-9]*'.'[0-9]+)[eE][-+]?[0-9]+")) {
-                return ops("(") + visit(ctx.atom()) + ops(")")
-                        + sup(prefix + visit(ctx.power()));
+                if (left.matches("([0-9]+|[0-9]*'.'[0-9]+)[eE][-+]?[0-9]+")) {
+                    return parseBinaryOperator(
+                            ops("(") + visit(ctx.getChild(0)) + ops(")"),
+                            ctx.getChild(1).getText(),
+                            visit(ctx.getChild(2)));
+                } else {
+                    return parseBinaryOperator(
+                            visit(ctx.getChild(0)),
+                            ctx.getChild(1).getText(),
+                            visit(ctx.getChild(2)));
+                }
             } else {
-                return visit(ctx.atom()) + sup(prefix + visit(ctx.power()));
+                return super.visitPowerOperator(ctx);
             }
         }
 
@@ -128,34 +176,34 @@ public class ExpressionRenderer {
         public String visitFunctionCall(ExpressionParser.FunctionCallContext ctx) {
             return String.format(
                     "<i>%s</i>%s",
-                    colorize(ctx.func.getText(), "#445588"), ops("(") + visit(ctx.expr()) + ops(")"));
+                    colorize(ctx.func.getText(), "#445588"), visit(ctx.bracketExpression()));
         }
 
         @Override
-        public String visitBrackets(ExpressionParser.BracketsContext ctx) {
-            return ops("(") + visit(ctx.expr()) + ops(")");
+        public String visitBracketExpression(ExpressionParser.BracketExpressionContext ctx) {
+            return ops("(") + visit(ctx.expression()) + ops(")");
         }
 
         @Override
-        public String visitVariable(ExpressionParser.VariableContext ctx) {
-            char id = ctx.ID().getText().charAt(0);
-            mDepends.add(id);
-
-            String color = ctx.getText().equals("x") ? "#DD1144" : "#008080";
-            return bold(colorize("" + id, color));
-        }
-
-        @Override
-        public String visitLiteral(ExpressionParser.LiteralContext ctx) {
+        public String visitNumber(ExpressionParser.NumberContext ctx) {
             String text = ctx.getText();
-            String[] parts = text.split("e");
+            String[] parts = text.split("[eE]");
 
             StringBuilder sb = new StringBuilder(parts[0]);
             if (parts.length > 1) {
                 sb.append("&times;10").append(sup(parts[1]));
             }
 
-            return colorize(sb.toString(), "#222222");
+            return colorize(sb.toString(), "#0074D9");
+        }
+
+        @Override
+        public String visitIdentifier(ExpressionParser.IdentifierContext ctx) {
+            char id = ctx.ID().getText().charAt(0);
+            mDepends.add(id);
+
+            String color = ctx.getText().equals("x") ? "#DD1144" : "#008080";
+            return bold(colorize("" + id, color));
         }
 
         private String colorize(String s, String color) {

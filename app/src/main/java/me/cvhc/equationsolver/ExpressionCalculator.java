@@ -26,7 +26,7 @@ public class ExpressionCalculator {
             mValueCache.remove(id);
         }
 
-        for (Character c: mIDList.keySet()) {
+        for (Character c : mIDList.keySet()) {
             ExpressionRenderer expr = mIDList.get(c);
             if (expr.getDependency().contains(id)) {
                 removeCache(c);
@@ -61,7 +61,9 @@ public class ExpressionCalculator {
         mEvalOrder = topologicalSort();
 
         if (mEvalOrder == null) {
-            if (prev != null) { mIDList.put(c, prev); }
+            if (prev != null) {
+                mIDList.put(c, prev);
+            }
             return false;
         }
 
@@ -73,7 +75,7 @@ public class ExpressionCalculator {
     private boolean _topologicalSort(ExpressionRenderer expr,
                                      ArrayList<Character> result,
                                      HashSet<Character> marked) {
-        for (Character c: expr.getDependency()) {
+        for (Character c : expr.getDependency()) {
             // detect loop dependency
             if (marked.contains(c)) {
                 return false;
@@ -100,7 +102,7 @@ public class ExpressionCalculator {
         ArrayList<Character> result = new ArrayList<>();
         HashSet<Character> marked = new HashSet<>();
 
-        for (Character c: mIDList.keySet()) {
+        for (Character c : mIDList.keySet()) {
             if (!result.contains(c)) {
                 if (!_topologicalSort(mIDList.get(c), result, marked)) {
                     return null;
@@ -123,7 +125,7 @@ public class ExpressionCalculator {
         }
 
         if (!mValueCache.containsKey(id)) {
-            for (Character c: mEvalOrder) {
+            for (Character c : mEvalOrder) {
                 if (!mValueCache.containsKey(c)) {
                     ExpressionRenderer expr = mIDList.get(c);
                     ExpressionVisitorImpl visitor = new ExpressionVisitorImpl();
@@ -154,9 +156,69 @@ public class ExpressionCalculator {
         }
     }
 
-
     private class ExpressionVisitorImpl extends ExpressionBaseVisitor<OptionUnion> {
         private ParseTreeProperty<OptionUnion> NodeProperty = new ParseTreeProperty<>();
+
+        private OptionUnion parseBinaryOperator(OptionUnion left, String op, OptionUnion right) {
+            OptionUnion current = new OptionUnion();
+
+            if (left.mVariable != null || right.mVariable != null) {
+                current.mVariable = new HashSet<>();
+                if (left.mVariable != null) {
+                    current.mVariable.addAll(left.mVariable);
+                }
+                if (right.mVariable != null) {
+                    current.mVariable.addAll(right.mVariable);
+                }
+            } else {
+                switch (op) {
+                    case "+":
+                        current.mValue = left.mValue + right.mValue;
+                        break;
+                    case "-":
+                        current.mValue = left.mValue - right.mValue;
+                        break;
+                    case "*":
+                    case " ":
+                        current.mValue = left.mValue * right.mValue;
+                        break;
+                    case "/":
+                        current.mValue = left.mValue / right.mValue;
+                        break;
+                    case "^":
+                        current.mValue = Math.pow(left.mValue, right.mValue);
+                        break;
+                    case "^-":
+                        current.mValue = Math.pow(left.mValue, -right.mValue);
+                        break;
+                    default:
+                        throw new RuntimeException();
+                }
+            }
+
+            return current;
+        }
+
+        private OptionUnion parseUnaryOperator(String op, OptionUnion right) {
+            OptionUnion current = new OptionUnion();
+
+            if (right.mVariable != null) {
+                current.mVariable = new HashSet<>(right.mVariable);
+            } else {
+                switch (op) {
+                    case "+":
+                        current.mValue = right.mValue;
+                        break;
+                    case "-":
+                        current.mValue = - right.mValue;
+                        break;
+                    default:
+                        throw new RuntimeException();
+                }
+            }
+
+            return current;
+        }
 
         @Override
         protected OptionUnion aggregateResult(OptionUnion aggregate, OptionUnion nextResult) {
@@ -164,105 +226,59 @@ public class ExpressionCalculator {
         }
 
         @Override
-        public OptionUnion visitBinaryOp(ExpressionParser.BinaryOpContext ctx) {
+        public OptionUnion visitBinaryOperatorL2(ExpressionParser.BinaryOperatorL2Context ctx) {
             OptionUnion prop = NodeProperty.get(ctx);
             if (prop != null && mValueCache.keySet().containsAll(prop.mVariable)) {
                 return prop;
             }
 
-            OptionUnion left = visit(ctx.expr(0));
-            OptionUnion right = visit(ctx.expr(1));
-            OptionUnion current = new OptionUnion();
-
-            if (left.mVariable != null || right.mVariable != null) {
-                current.mVariable = new HashSet<>();
-                if (left.mVariable != null) {
-                    current.mVariable.addAll(left.mVariable);
-                }
-                if (right.mVariable != null) {
-                    current.mVariable.addAll(right.mVariable);
-                }
+            if (ctx.getChildCount() == 3) {
+                return parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        ctx.getChild(1).getText(),
+                        visit(ctx.getChild(2)));
             } else {
-                switch (ctx.op.getType()) {
-                    case ExpressionParser.ADD:
-                        current.mValue = left.mValue + right.mValue;
-                        break;
-                    case ExpressionParser.SUB:
-                        current.mValue = left.mValue - right.mValue;
-                        break;
-                    case ExpressionParser.MUL:
-                        current.mValue = left.mValue * right.mValue;
-                        break;
-                    case ExpressionParser.DIV:
-                        current.mValue = left.mValue / right.mValue;
-                        break;
-                    default:
-                        break;
-                }
+                return super.visitBinaryOperatorL2(ctx);
             }
-
-            NodeProperty.put(ctx, current);
-            return current;
         }
 
         @Override
-        public OptionUnion visitUnaryOp(ExpressionParser.UnaryOpContext ctx) {
+        public OptionUnion visitBinaryOperatorL1(ExpressionParser.BinaryOperatorL1Context ctx) {
             OptionUnion prop = NodeProperty.get(ctx);
             if (prop != null && mValueCache.keySet().containsAll(prop.mVariable)) {
                 return prop;
             }
 
-            OptionUnion child = visit(ctx.factor());
-            OptionUnion current = new OptionUnion();
-
-            if (child.mVariable != null) {
-                current.mVariable = new HashSet<>(child.mVariable);
-
+            if (ctx.getChildCount() == 3) {
+                OptionUnion current;
+                current = parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        ctx.getChild(1).getText(),
+                        visit(ctx.getChild(2)));
+                NodeProperty.put(ctx, current);
+                return current;
             } else {
-                switch (ctx.op.getType()) {
-                    case ExpressionParser.ADD:
-                        break;
-                    case ExpressionParser.SUB:
-                        current.mValue = -child.mValue;
-                        break;
-                    default:
-                        break;
-                }
+                return super.visitBinaryOperatorL1(ctx);
             }
-
-            NodeProperty.put(ctx, current);
-            return current;
         }
 
         @Override
-        public OptionUnion visitPowerOp(ExpressionParser.PowerOpContext ctx) {
+        public OptionUnion visitUnaryOperator(ExpressionParser.UnaryOperatorContext ctx) {
             OptionUnion prop = NodeProperty.get(ctx);
             if (prop != null && mValueCache.keySet().containsAll(prop.mVariable)) {
                 return prop;
             }
 
-            OptionUnion left = visit(ctx.atom());
-            OptionUnion right = visit(ctx.power());
-            OptionUnion current = new OptionUnion();
-
-            if (left.mVariable != null || right.mVariable != null) {
-                current.mVariable = new HashSet<>();
-                if (left.mVariable != null) {
-                    current.mVariable.addAll(left.mVariable);
-                }
-                if (right.mVariable != null) {
-                    current.mVariable.addAll(right.mVariable);
-                }
+            if (ctx.getChildCount() == 2) {
+                OptionUnion current;
+                current = parseUnaryOperator(
+                        ctx.getChild(0).getText(),
+                        visit(ctx.getChild(1)));
+                NodeProperty.put(ctx, current);
+                return current;
             } else {
-                if (ctx.op.getType() == ExpressionParser.EXP) {
-                    current.mValue = Math.pow(left.mValue, right.mValue);
-                } else {
-                    current.mValue = Math.pow(left.mValue, -right.mValue);
-                }
+                return super.visitUnaryOperator(ctx);
             }
-
-            NodeProperty.put(ctx, current);
-            return current;
         }
 
         @Override
@@ -272,20 +288,37 @@ public class ExpressionCalculator {
                 return prop;
             }
 
-            OptionUnion left = visit(ctx.power());
-            OptionUnion right = visit(ctx.factor());
-            OptionUnion current = new OptionUnion();
-
-            if (left.mVariable != null || right.mVariable != null) {
-                current.mVariable = new HashSet<>();
-                if (left.mVariable != null) { current.mVariable.addAll(left.mVariable); }
-                if (right.mVariable != null) { current.mVariable.addAll(right.mVariable); }
+            if (ctx.getChildCount() == 2) {
+                OptionUnion current;
+                current = parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        " ",
+                        visit(ctx.getChild(1)));
+                NodeProperty.put(ctx, current);
+                return current;
             } else {
-                current.mValue = left.mValue * right.mValue;
+                return super.visitImplicitMultiply(ctx);
+            }
+        }
+
+        @Override
+        public OptionUnion visitPowerOperator(ExpressionParser.PowerOperatorContext ctx) {
+            OptionUnion prop = NodeProperty.get(ctx);
+            if (prop != null && mValueCache.keySet().containsAll(prop.mVariable)) {
+                return prop;
             }
 
-            NodeProperty.put(ctx, current);
-            return current;
+            if (ctx.getChildCount() == 3) {
+                OptionUnion current;
+                current = parseBinaryOperator(
+                        visit(ctx.getChild(0)),
+                        ctx.getChild(1).getText(),
+                        visit(ctx.getChild(2)));
+                NodeProperty.put(ctx, current);
+                return current;
+            } else {
+                return super.visitPowerOperator(ctx);
+            }
         }
 
         @Override
@@ -295,7 +328,7 @@ public class ExpressionCalculator {
                 return prop;
             }
 
-            OptionUnion child = visit(ctx.expr());
+            OptionUnion child = visit(ctx.bracketExpression());
             OptionUnion current = new OptionUnion();
 
             if (child.mVariable != null) {
@@ -330,11 +363,25 @@ public class ExpressionCalculator {
                 }
             }
 
+            NodeProperty.put(ctx, current);
             return current;
         }
 
         @Override
-        public OptionUnion visitVariable(ExpressionParser.VariableContext ctx) {
+        public OptionUnion visitBracketExpression(ExpressionParser.BracketExpressionContext ctx) {
+            return visit(ctx.expression());
+        }
+
+        @Override
+        public OptionUnion visitNumber(ExpressionParser.NumberContext ctx) {
+            OptionUnion current = new OptionUnion();
+            current.mValue = Double.valueOf(ctx.NUMBER().getText());
+            NodeProperty.put(ctx, current);
+            return current;
+        }
+
+        @Override
+        public OptionUnion visitIdentifier(ExpressionParser.IdentifierContext ctx) {
             char id = ctx.ID().getText().charAt(0);
 
             if (mValueCache.containsKey(id)) {
@@ -346,13 +393,5 @@ public class ExpressionCalculator {
                 return current;
             }
         }
-
-        @Override
-        public OptionUnion visitLiteral(ExpressionParser.LiteralContext ctx) {
-            OptionUnion current = new OptionUnion();
-            current.mValue = Double.valueOf(ctx.NUMBER().getText());
-            return current;
-        }
     }
-
 }
