@@ -1,46 +1,105 @@
 package me.cvhc.equationsolver;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
+import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
+
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Arrays;
 
 public class MainFragment extends Fragment {
+    private final String LOG_TAG = MainFragment.class.getSimpleName();
+    private final int HISTORY_SIZE = 10;
 
-    private EditText textEquation;
-    private TextView labelROILower, labelROIUpper;
-    private double lowerROI, upperROI;
-    private ListView listViewIDs;
-    private SettingIDAdapter settingIDAdapter;
-    private ExpressionEvaluator leftEval, rightEval;
-    private HashSet<Character> usedIDs = new HashSet<>();
-    private double defaultLowerBound, defaultUpperBound;
-    private SharedPreferences sharedPreferences;
-    private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private ActionBar mActionBar;
+    private RecyclerView mRecyclerView;
+    private RecyclerViewAdapter mRecyclerViewAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private AutoCompleteTextView mEditInputNewExpression;
 
-    private class SimpleEquationInputFilter implements InputFilter {
+    private ArrayAdapter<String> mAutocompleteAssignmentAdapter;
+    private ArrayAdapter<String> mAutocompleteEquationAdapter;
+
+    private ToggleButton mToggleInputType;
+    private Button mButtonSolve;
+    private ExpressionKeypad mExpressionKeypad;
+    private View mDummy;
+
+    private Toast mToast;
+    private boolean mDoubleBackToExitPressedOnce = false;
+
+    public MainFragment() {
+    }
+
+    private class CustomTextWatcher implements TextWatcher {
+        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            String str = s.toString();
+
+            if (mToggleInputType.isChecked() || str.length() == 0) {
+                return;
+            }
+
+            char id = str.charAt(0);
+            String prefix = id + " = ";
+
+            if (!Character.isLowerCase(id)) {
+                makeToast(String.format(getString(R.string.error_invalid_id), id));
+                mEditInputNewExpression.setText("");
+                return;
+            }
+
+            if (str.length() == 1) {
+                mEditInputNewExpression.setText(prefix);
+                mEditInputNewExpression.setSelection(prefix.length());
+            } else if (str.length() > 1) {
+                if (str.length() < prefix.length()) {
+                    mEditInputNewExpression.setText("");
+                } else if (!str.startsWith(prefix)) {
+                    mEditInputNewExpression.setText(prefix);
+                    mEditInputNewExpression.setSelection(prefix.length());
+                }
+            }
+        }
+    }
+
+    private class SimpleInputFilter implements InputFilter {
         public CharSequence filter(CharSequence source, int start, int end,
                                    Spanned dest, int dstart, int dend) {
             boolean meetEqual = dest.toString().indexOf('=') != -1;
@@ -49,12 +108,12 @@ public class MainFragment extends Fragment {
                 char c = source.charAt(i);
                 if (c == '=') {
                     if (meetEqual) {
-                        Toast.makeText(getActivity(), R.string.error_multiple_equal_sign, Toast.LENGTH_SHORT).show();
+                        makeToast(R.string.error_multiple_equal_sign);
                         return "";
                     }
                 } else if (!Character.isLetter(c) && !Character.isDigit(c)
                         && ".=+-*/^() ".indexOf(c) == -1) {
-                    Toast.makeText(getActivity(), R.string.error_illegal_char, Toast.LENGTH_SHORT).show();
+                    makeToast(R.string.error_illegal_char);
                     return "";
                 }
             }
@@ -62,346 +121,297 @@ public class MainFragment extends Fragment {
         }
     }
 
-    private boolean prepareEquation() {
-        if (leftEval == null || rightEval == null) {
-            new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.error_invalid_equation)
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.alertDialogIcon)
-                    .show();
-            return false;
+
+    private class SwipeListener implements SwipeableRecyclerViewTouchListener.SwipeListener {
+        @Override
+        public boolean canSwipeLeft(int position) {
+            return true;
         }
 
-        if (!settingIDAdapter.resolveIDs()) {
-            new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.indeterminate_constants)
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.alertDialogIcon)
-                    .show();
-            return false;
+        @Override
+        public boolean canSwipeRight(int position) {
+            return true;
         }
 
-        if (lowerROI - lowerROI != 0.0 || upperROI - upperROI != 0.0 || lowerROI >= upperROI) {
-            new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.invalid_search_range)
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.alertDialogIcon)
-                    .show();
-            return false;
+        private void helper(int[] reverseSortedPositions) {
+            for (int position : reverseSortedPositions) {
+                mRecyclerViewAdapter.removeItem(position);
+            }
         }
 
-        return true;
+        @Override
+        public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
+            helper(reverseSortedPositions);
+        }
+
+        @Override
+        public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
+            helper(reverseSortedPositions);
+        }
     }
 
-    public static MainFragment newInstance() {
+    private class FinishEditListener implements EditText.OnEditorActionListener {
+        @Override
+        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+            if (actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                if (mRecyclerViewAdapter.newItem(v.getText(), mToggleInputType.isChecked())) {
+                    mRecyclerView.smoothScrollToPosition(mRecyclerViewAdapter.getItemCount() - 1);
+
+                    if (mToggleInputType.isChecked()) {
+                        mAutocompleteEquationAdapter.insert(v.getText().toString(), 0);
+                    } else {
+                        mAutocompleteAssignmentAdapter.insert(v.getText().toString(), 0);
+                    }
+
+                    v.setText("");
+                    return true;
+                }
+                makeToast(R.string.error_illegal_expression);
+            }
+
+            return false;
+        }
+    }
+
+    public static MainFragment newInstance(int sectionNumber) {
         MainFragment fragment = new MainFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
     }
 
+    @SuppressLint("ShowToast")
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        // initialize View objects
-        labelROILower = (TextView)rootView.findViewById(R.id.labelROILower);
-        labelROIUpper = (TextView)rootView.findViewById(R.id.labelROIUpper);
-        textEquation = (EditText)rootView.findViewById(R.id.textEquation);
-        listViewIDs = (ListView)rootView.findViewById(R.id.listViewVariables);
+        mActionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
+        mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
+        mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
+        mDummy = rootView.findViewById(R.id.dummyFocus);
+        mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
 
-        Button buttonPlot = (Button)rootView.findViewById(R.id.buttonPlot);
-        Button buttonSolve = (Button)rootView.findViewById(R.id.buttonSolve);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        reloadPreferences();
-        updateROI(defaultLowerBound, defaultUpperBound);
+        ArrayList<String> equationHistory = new ArrayList<>();
+        ArrayList<String> assignmentHistory = new ArrayList<>();
 
-        buttonPlot.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (prepareEquation()) {
-                    Intent intent = new Intent(getActivity(), PlotActivity.class)
-                            .putExtra("LEFT_PART", leftEval.toString())
-                            .putExtra("RIGHT_PART", rightEval.toString())
-                            .putExtra("LOWER_BOUND", lowerROI)
-                            .putExtra("UPPER_BOUND", upperROI)
-                            .putExtra("CONSTANT_VALUES", settingIDAdapter.getResolvedIDs())
-                            .putExtra("VARIABLE", settingIDAdapter.getVariable());
-                    startActivityForResult(intent, 0);
-                }
-            }
-        });
-
-        buttonSolve.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (prepareEquation()) {
-                    final ExpressionEvaluator left = new ExpressionEvaluator(leftEval.toString());
-                    final ExpressionEvaluator right = new ExpressionEvaluator(rightEval.toString());
-                    final Character variable = settingIDAdapter.getVariable();
-
-                    left.updateVariables(settingIDAdapter.getResolvedIDs());
-                    right.updateVariables(settingIDAdapter.getResolvedIDs());
-
-                    new SolveTask(getActivity(), lowerROI, upperROI).execute(new FunctionWrapper.MathFunction() {
-                        @Override
-                        public double call(double x) {
-                            left.setVariable(variable, x);
-                            right.setVariable(variable, x);
-                            return left.getValue() - right.getValue();
-                        }
-                    });
-                }
-            }
-        });
-
-        settingIDAdapter = new SettingIDAdapter(getActivity(), usedIDs);
-        listViewIDs.setAdapter(settingIDAdapter);
-
-        listViewIDs.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position >= 0) {
-                    Character idChar = (Character) settingIDAdapter.getItem(position);
-                    settingIDAdapter.assignID(idChar, null);
-                    settingIDAdapter.notifyDataSetChanged();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        listViewIDs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                final Character id = (Character) settingIDAdapter.getItem(position);
-                final Character variable = settingIDAdapter.getVariable();
-
-                if (position == 0) {
-                    AlertDialog.Builder selector = new AlertDialog.Builder(getActivity());
-
-                    final ArrayList<Character> items = new ArrayList<>(usedIDs);
-                    String[] strings = new String[items.size()];
-                    Collections.sort(items);
-                    for (int i = 0; i < items.size(); i++) {
-                        strings[i] = items.get(i) + " as variable";
-                    }
-
-                    selector.setSingleChoiceItems(strings, items.indexOf(variable), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int position) {
-                            Character selection = items.get(position);
-
-                            if (selection != variable) {
-                                settingIDAdapter.setVariable(selection);
-                                settingIDAdapter.notifyDataSetChanged();
-                            }
-
-                            Log.d(LOG_TAG, "User chose " + selection + " as variable");
-                            dialog.dismiss();
-                        }
-
-                    });
-
-                    selector.setTitle(R.string.choose_variable_id);
-                    selector.show();
-                } else {
-                    final ExpressionSettingView settingView = new ExpressionSettingView(getActivity());
-                    final AlertDialog dialog = new AlertDialog.Builder(getActivity())
-                            .setTitle(R.string.setting_id)
-                            .setView(settingView)
-                            .create();
-
-                    settingView.setPrefixText(id + " = ");
-                    settingView.setText(settingIDAdapter.getExpression(id));
-
-                    settingView.setNegativeButtonListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dialog.dismiss();
-                        }
-                    });
-
-                    settingView.setPositiveButtonListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            ExpressionEvaluator eval = settingView.getExpression();
-                            if (eval != null) {
-                                settingIDAdapter.assignID(id, eval);
-                                settingIDAdapter.notifyDataSetChanged();
-                                Log.d(LOG_TAG, "Setting " + id + " to " + eval.toString());
-                            }
-                            dialog.dismiss();
-                        }
-                    });
-
-                    dialog.show();
-                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-                }
-            }
-        });
-
-        textEquation.setFilters(new InputFilter[]{new SimpleEquationInputFilter()});
-        textEquation.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        if (savedInstanceState != null) {
+            String[] saved = (String[])savedInstanceState.getSerializable("EQUATION_HISTORY");
+            if (saved != null) {
+                equationHistory.addAll(Arrays.asList(saved));
             }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String eq = s.toString();
-                if (eq.length() == 0) {
-                    textEquation.setError(null);
-                    return;
-                }
-
-                String[] part = eq.split("=", 2);
-                Log.d(LOG_TAG, "Equation: " + eq);
-                if (part.length != 2) {
-                    textEquation.setError(getString(R.string.error_invalid_equation));
-                    return;
-                }
-
-                ExpressionEvaluator left = new ExpressionEvaluator(part[0].trim());
-                ExpressionEvaluator right = new ExpressionEvaluator(part[1].trim());
-
-                if (left.isError() || right.isError()) {
-                    leftEval = rightEval = null;
-                    textEquation.setError(getString(R.string.error_illegal_expression));
-                } else {
-                    leftEval = left;
-                    rightEval = right;
-
-                    usedIDs.clear();
-                    usedIDs.addAll(leftEval.getProperty().Variables);
-                    usedIDs.addAll(rightEval.getProperty().Variables);
-
-                    settingIDAdapter.notifyDataSetChanged();
-                }
-            }
-        });
-
-        abstract class updateROIListener implements View.OnClickListener {
-            private String title;
-
-            public updateROIListener(String s) {
-                title = s;
-            }
-
-            abstract void updateValue(double val);
-
-            abstract double getValue();
-
-            abstract double getDefault();
-
-            abstract boolean testValue(double val);
-
-            @Override
-            public void onClick(View v) {
-                final TextView label = (TextView)v;
-                final DecimalSettingView settingView = new DecimalSettingView(getActivity());
-                settingView.setInputValue(getValue());
-                settingView.setDefaultValue(getDefault());
-
-                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity())
-                        .setTitle(title)
-                        .setView(settingView)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                double val = settingView.getInputValue().doubleValue();
-                                updateValue(val);
-                                String s = String.format(getString(R.string.format_bound), val);
-                                label.setText(s);
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, null);
-
-                AlertDialog dialog = alert.create();
-                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-                dialog.show();
-
-                final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
-                    @Override
-                    public void onInputValueChanged(Number number) {
-                        double val = number.doubleValue();
-                        if (testValue(val)) {
-                            positiveButton.setEnabled(!(Double.isNaN(val) || Double.isInfinite(val)));
-                        } else {
-                            settingView.setWarning(getString(R.string.error_lower_bound_higher_than_upper_bound));
-                            positiveButton.setEnabled(false);
-                        }
-                    }
-                });
+            saved = (String[])savedInstanceState.getSerializable("ASSIGNMENT_HISTORY");
+            if (saved != null) {
+                assignmentHistory.addAll(Arrays.asList(saved));
             }
         }
 
-        labelROILower.setOnClickListener(new updateROIListener(getString(R.string.lower_bound_of_roi)) {
-            @Override double getDefault() { return defaultLowerBound; }
-            @Override void updateValue(double val) { updateROI(val, null); }
-            @Override double getValue() { return lowerROI; }
-            @Override boolean testValue(double val) { return val < upperROI; }
+        mAutocompleteEquationAdapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_list_item_1, equationHistory);
+        mAutocompleteAssignmentAdapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_list_item_1, assignmentHistory);
+
+        mEditInputNewExpression.setAdapter(mAutocompleteAssignmentAdapter);
+        mEditInputNewExpression.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                if (event.getAction() != MotionEvent.ACTION_UP) {
+                    return false;
+                }
+
+                if (mEditInputNewExpression.isFocused()) {
+                    if (mEditInputNewExpression.getAdapter().getCount() > 0) {
+                        mEditInputNewExpression.showDropDown();
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    mEditInputNewExpression.requestFocus();
+                    return true;
+                }
+            }
         });
 
-        labelROIUpper.setOnClickListener(new updateROIListener(getString(R.string.upper_bound_of_roi)) {
-            @Override double getDefault() { return defaultUpperBound; }
-            @Override void updateValue(double val) { updateROI(null, val); }
-            @Override double getValue() { return upperROI; }
-            @Override boolean testValue(double val) { return val > lowerROI; }
+        mEditInputNewExpression.setOnEditorActionListener(new FinishEditListener());
+        mEditInputNewExpression.addTextChangedListener(new CustomTextWatcher());
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        int VERTICAL_ITEM_SPACE = 10;
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(VERTICAL_ITEM_SPACE));
+
+        mLayoutManager = new LinearLayoutManager(this.getActivity());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mButtonSolve.setVisibility(View.GONE);
+        mButtonSolve.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), PlotActivity.class)
+                        .putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
+                startActivityForResult(intent, 0);
+            }
         });
+
+        mRecyclerViewAdapter = new RecyclerViewAdapter();
+        mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
+            @Override
+            public void onItemChange() {
+                if (mRecyclerViewAdapter.isReady()) {
+                    mButtonSolve.setVisibility(View.VISIBLE);
+                } else {
+                    mButtonSolve.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        mRecyclerView.setAdapter(mRecyclerViewAdapter);
+        mRecyclerView.addOnItemTouchListener(
+                new SwipeableRecyclerViewTouchListener(mRecyclerView, new SwipeListener()));
+
+        Keyboard keypad = new Keyboard(this.getActivity(), R.xml.keyboard);
+        mEditInputNewExpression.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
+        mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from show up
+        mEditInputNewExpression.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    showKeypad();
+                } else {
+                    mDummy.requestFocus();
+                    hideKeypad();
+                }
+            }
+        });
+
+        mExpressionKeypad = (ExpressionKeypad) rootView.findViewById(R.id.keypadMainActivity);
+        mExpressionKeypad.setKeyboard(keypad);
+        mExpressionKeypad.setPreviewEnabled(false);
+
+        ExpressionKeypadActionListener listener = new ExpressionKeypadActionListener(this.getActivity());
+        listener.addOnChangeModeListener(new ExpressionKeypadActionListener.OnChangeModeListener() {
+            @Override
+            public void onChangeMode() {
+                hideKeypad();
+                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(mEditInputNewExpression, 0);
+                //imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+                mActionBar.hide();
+                Snackbar.make(mEditInputNewExpression,
+                        R.string.reopen_keyboard, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        mExpressionKeypad.setOnKeyboardActionListener(listener);
+
+        mToggleInputType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mEditInputNewExpression.setAdapter(mAutocompleteEquationAdapter);
+                    mEditInputNewExpression.setHint(R.string.hint_input_equation);
+                } else {
+                    mEditInputNewExpression.setAdapter(mAutocompleteAssignmentAdapter);
+                    mEditInputNewExpression.setHint(R.string.hint_input_assignment);
+                }
+
+                mEditInputNewExpression.setText("");
+            }
+        });
+        mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
 
         return rootView;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        reloadPreferences();
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        String[] assignmentHistory = new String[HISTORY_SIZE];
+        String[] equationHistory = new String[HISTORY_SIZE];
+
+        for (int i=0; i<HISTORY_SIZE && i<mAutocompleteAssignmentAdapter.getCount(); i++) {
+            assignmentHistory[i] = mAutocompleteAssignmentAdapter.getItem(i);
+        }
+
+        for (int i=0; i<HISTORY_SIZE && i<mAutocompleteEquationAdapter.getCount(); i++) {
+            equationHistory[i] = mAutocompleteEquationAdapter.getItem(i);
+        }
+
+        outState.putSerializable("ASSIGNMENT_HISTORY", assignmentHistory);
+        outState.putSerializable("EQUATION_HISTORY", equationHistory);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (data != null) {
-            updateROI(data.getDoubleExtra("LOWER_BOUND", 0.0), data.getDoubleExtra("UPPER_BOUND", 0.0));
+    private void showKeypad() {
+        if (!isKeypadOn()) {
+            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+            mExpressionKeypad.setVisibility(View.VISIBLE);
+            mActionBar.hide();
         }
     }
 
-    private void reloadPreferences() {
-        // load default plotting boundary settings
-        double boundThreshold1 = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
-        double boundThreshold2 = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
-
-        if (boundThreshold1 == boundThreshold2) {
-            // get "next" float bigger than boundThreshold1
-            long bits = Double.doubleToLongBits(boundThreshold1);
-            bits++;
-            boundThreshold2 = Double.longBitsToDouble(bits);
-        }
-
-        defaultLowerBound = Math.min(boundThreshold1, boundThreshold2);
-        defaultUpperBound = Math.max(boundThreshold1, boundThreshold2);
-    }
-
-    private void updateROI(Double lower, Double upper) {
-        if (lower != null) {
-            lowerROI = lower;
-            labelROILower.setText(String.format(getString(R.string.format_bound), lower));
-        }
-
-        if (upper != null) {
-            upperROI = upper;
-            labelROIUpper.setText(String.format(getString(R.string.format_bound), upper));
+    private void hideKeypad() {
+        if (isKeypadOn()) {
+            mExpressionKeypad.setVisibility(View.GONE);
+            mActionBar.show();
         }
     }
+
+    private boolean isKeypadOn() {
+        return mExpressionKeypad.getVisibility() == View.VISIBLE;
+    }
+
+    public boolean onBackPressed() {
+        if (mExpressionKeypad.getVisibility() == View.VISIBLE) {  // app keypad is open
+            hideKeypad();
+            mDummy.requestFocus();
+        } else {
+            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm.isAcceptingText()) {  // OS IME is open, close it
+                mActionBar.show();
+                imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
+                mDummy.requestFocus();
+            } else if (mEditInputNewExpression.isFocused()) {  // App-keyboard state is broken, reset it
+                mDummy.requestFocus();
+            } else {  // no keyboard, try exit
+                return !tryExit();
+            }
+        }
+
+        return true;
+    }
+
+    private boolean tryExit() {
+        if (mDoubleBackToExitPressedOnce) {
+            return true;
+        }
+
+        mDoubleBackToExitPressedOnce = true;
+        makeToast(R.string.click_twice_to_exit);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mDoubleBackToExitPressedOnce = false;
+            }
+        }, 2000);
+
+        return false;
+    }
+
+    private void makeToast(String msg) {
+        mToast.setText(msg);
+        mToast.show();
+    }
+
+    private void makeToast(int res) {
+        mToast.setText(res);
+        mToast.show();    }
 }

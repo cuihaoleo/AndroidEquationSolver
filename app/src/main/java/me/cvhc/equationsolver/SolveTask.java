@@ -6,14 +6,13 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.TextView;
 
 public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, Double> {
     private Activity parentActivity;
     private double lowerROI, upperROI;
     private ProgressDialog progressDialog;
-    FunctionWrapper.MathFunction func;
+    private FunctionWrapper.MathFunction func;
 
     private final static int MAX_PROGRESS = 1000;
     private static final int MAX_PARTITION = 16384;
@@ -151,13 +150,6 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
                     .show();
         } else {
             double error = func.call(result);
-            ListView listViewIDs = (ListView)parentActivity.findViewById(R.id.listViewVariables);
-
-            View view = listViewIDs.getChildAt(-listViewIDs.getFirstVisiblePosition());
-            if(view != null) {
-                TextView textViewAssignment = (TextView)view.findViewById(R.id.textViewAssignment);
-                textViewAssignment.setText(String.format("= %s", result.toString()));
-            }
 
             AlertDialog.Builder alert = new AlertDialog.Builder(parentActivity)
                     .setTitle(R.string.solution)

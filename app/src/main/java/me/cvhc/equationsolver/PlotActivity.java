@@ -6,23 +6,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.androidplot.Plot;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.XYPlot;
+import com.androidplot.xy.XYSeries;
 import com.androidplot.xy.XYStepMode;
 
 import java.text.FieldPosition;
@@ -37,7 +38,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private TextView textLargeWarning;
     private XYPlot plot;
     private CheckBox checkXLogScale, checkYLogScale;
-    SharedPreferences sharedPreferences;
+    private HashMap<Character, String> anotherSide;
+    private SharedPreferences sharedPreferences;
 
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
@@ -45,12 +47,80 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private static double SCALE_YAXIS = 1.12;
 
+    private class BoundSettingListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            final TextView label = (TextView)v;
+            final DecimalSettingView settingView = new DecimalSettingView(PlotActivity.this);
+            final String which;
+
+            double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
+            double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+            final double thisValue, anotherValue;
+
+            if (v == textLowerBound) {
+                thisValue = rminX;
+                anotherValue = rmaxX;
+                which = "Lower";
+            } else if (v == textUpperBound) {
+                thisValue = rmaxX;
+                anotherValue = rminX;
+                which = "Upper";
+            } else {
+                throw new RuntimeException();
+            }
+
+            AlertDialog.Builder alert = new AlertDialog.Builder(PlotActivity.this)
+                    .setTitle(String.format("Setting %s Bound", which))
+                    .setView(settingView)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            label.setText(settingView.getInputValue().toString());
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null);
+
+            final AlertDialog dialog = alert.create();
+            final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+            settingView.setDefaultValue(thisValue);
+            settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
+                @Override
+                public void onInputValueChanged(Number val) {
+                    if (which.equals("Lower")) {
+                        if (val.doubleValue() > anotherValue) {
+                            positiveButton.setEnabled(true);
+                            settingView.setWarning(null);
+                        } else {
+                            positiveButton.setEnabled(false);
+                            settingView.setWarning("Invalid Bound");
+                        }
+                    } else if (which.equals("Upper")) {
+                        if (val.doubleValue() < anotherValue) {
+                            positiveButton.setEnabled(true);
+                            settingView.setWarning(null);
+                        } else {
+                            positiveButton.setEnabled(false);
+                            settingView.setWarning("Invalid Bound");
+                        }
+                    }
+
+                }
+            });
+
+            dialog.show();
+        }
+    }
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
 
         // initialize View objects
-        Button buttonApply = (Button) findViewById(R.id.buttonApply);
+        Button buttonApply = (Button)findViewById(R.id.buttonApply);
         ImageButton buttonReset = (ImageButton)findViewById(R.id.buttonReset);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
@@ -59,19 +129,21 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         checkYLogScale = (CheckBox)findViewById(R.id.checkYLogScale);
         plot = (XYPlot)findViewById(R.id.plot);
 
+        textLowerBound.setOnClickListener(new BoundSettingListener());
+
         // read data from Intent object
         Intent intent = getIntent();
-
-        minX = intent.getDoubleExtra("LOWER_BOUND", -1.0F);
-        maxX = intent.getDoubleExtra("UPPER_BOUND", 1.0F);
-        String leftPart = intent.getStringExtra("LEFT_PART");
-        String rightPart = intent.getStringExtra("RIGHT_PART");
-        final Character variable = intent.getCharExtra("VARIABLE", 'x');
-        HashMap<Character, Double> constValues = (HashMap<Character, Double>)intent.getSerializableExtra("CONSTANT_VALUES");
+        final ExpressionCalculator eval = new ExpressionCalculator();
+        anotherSide = (HashMap<Character, String>)intent.getSerializableExtra("EXPRESSION");
+        for (Character c: anotherSide.keySet()) {
+            eval.setVariable(c, anotherSide.get(c));
+        }
 
         // load preferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int prefPlot = sharedPreferences.getInt("pref_plot_samples", 200);
+        minX = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+        maxX = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
 
         // listeners
         buttonApply.setOnClickListener(new View.OnClickListener() {
@@ -184,38 +256,47 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.getTitleWidget().setVisible(false);
         plot.centerOnRangeOrigin(0.0);
 
-        // construct the series to plot
-        final ExpressionEvaluator left = new ExpressionEvaluator(leftPart);
-        final ExpressionEvaluator right = new ExpressionEvaluator(rightPart);
-
-        left.updateVariables(constValues);
-        right.updateVariables(constValues);
-
         mainSeries = new FunctionWrapper(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
                 if (checkXLogScale.isChecked()) { x = logScaleRecover(x); }
 
-                left.setVariable(variable, x);
-                right.setVariable(variable, x);
+                eval.setVariable('x', x);
+                ExpressionCalculator.OptionUnion op = eval.evaluate(' ');
 
-                double y = left.getValue() - right.getValue();
+                double y = op.getValue();
                 return checkYLogScale.isChecked() ? log1pScale(y) : y;
             }
         }, prefPlot);
+
+        plot.addSeries(new XYSeries() {
+            final static int DIVIDE = 8;
+            @Override public int size() { return DIVIDE + 1; }
+            @Override public Number getX(int index) { return minX + (maxX-minX)/DIVIDE*index; }
+            @Override public Number getY(int index) { return 0.0; }
+            @Override public String getTitle() { return null; }
+        }, new LineAndPointFormatter(Color.rgb(255, 0, 0), null, null, null));
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         updatePlotBound();
     }
 
     private void submitSelectRange() {
-        Intent resultIntent = new Intent();
         double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
         double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
-        resultIntent.putExtra("LOWER_BOUND", rminX);
-        resultIntent.putExtra("UPPER_BOUND", rmaxX);
-        setResult(RESULT_OK, resultIntent);
-        finish();
+
+        final ExpressionCalculator eval = new ExpressionCalculator();
+        for (Character c: anotherSide.keySet()) {
+            eval.setVariable(c, anotherSide.get(c));
+        }
+
+        new SolveTask(this, rminX, rmaxX).execute(new FunctionWrapper.MathFunction() {
+            @Override
+            public double call(double x) {
+                eval.setVariable('x', x);
+                return eval.evaluate(' ').getValue();
+            }
+        });
     }
 
     private void updatePlotBound() {
@@ -241,7 +322,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             textLargeWarning.setVisibility(View.VISIBLE);
             textLargeWarning.setText("No valid value in this range.");
         } else {
-            int color_id = nZero > 0 ? R.color.colorPermission : R.color.colorProhibition;
+            int color_id = nZero == 1 ? R.color.colorPermission : R.color.colorProhibition;
             int color = ContextCompat.getColor(plot.getContext(), color_id);
             plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
             textLargeWarning.setVisibility(View.INVISIBLE);
