@@ -372,7 +372,9 @@ public class MainFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        updateROI(data.getDoubleExtra("LOWER_BOUND", 0.0), data.getDoubleExtra("UPPER_BOUND", 0.0));
+        if (data != null) {
+            updateROI(data.getDoubleExtra("LOWER_BOUND", 0.0), data.getDoubleExtra("UPPER_BOUND", 0.0));
+        }
     }
 
     private void reloadPreferences() {
