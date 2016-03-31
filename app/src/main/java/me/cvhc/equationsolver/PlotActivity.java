@@ -52,7 +52,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         public void onClick(View v) {
             final TextView label = (TextView)v;
             final DecimalSettingView settingView = new DecimalSettingView(PlotActivity.this);
-            final String which;
+            final String who;
 
             double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
             double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
@@ -61,45 +61,54 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             if (v == textLowerBound) {
                 thisValue = rminX;
                 anotherValue = rmaxX;
-                which = "Lower";
+                who = "Lower";
             } else if (v == textUpperBound) {
                 thisValue = rmaxX;
                 anotherValue = rminX;
-                which = "Upper";
+                who = "Upper";
             } else {
                 throw new RuntimeException();
             }
 
             AlertDialog.Builder alert = new AlertDialog.Builder(PlotActivity.this)
-                    .setTitle(String.format("Setting %s Bound", which))
+                    .setTitle(String.format("Setting %s Bound", who))
                     .setView(settingView)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            label.setText(settingView.getInputValue().toString());
+                            Double n = settingView.getInputValue().doubleValue();
+                            label.setText(n.toString());
+
+                            if (who.equals("Lower")) {
+                                minX = checkXLogScale.isChecked() ? logScale(n) : n;
+                            } else {
+                                maxX = checkXLogScale.isChecked() ? logScale(n) : n;
+                            }
+
+                            updatePlotBound();
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null);
 
             final AlertDialog dialog = alert.create();
-            final Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-
             dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
             settingView.setDefaultValue(thisValue);
             settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
                 @Override
                 public void onInputValueChanged(Number val) {
-                    if (which.equals("Lower")) {
-                        if (val.doubleValue() > anotherValue) {
+                    Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+
+                    if (who.equals("Lower")) {
+                        if (val.doubleValue() < anotherValue) {
                             positiveButton.setEnabled(true);
                             settingView.setWarning(null);
                         } else {
                             positiveButton.setEnabled(false);
                             settingView.setWarning("Invalid Bound");
                         }
-                    } else if (which.equals("Upper")) {
-                        if (val.doubleValue() < anotherValue) {
+                    } else if (who.equals("Upper")) {
+                        if (val.doubleValue() > anotherValue) {
                             positiveButton.setEnabled(true);
                             settingView.setWarning(null);
                         } else {
@@ -130,6 +139,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot = (XYPlot)findViewById(R.id.plot);
 
         textLowerBound.setOnClickListener(new BoundSettingListener());
+        textUpperBound.setOnClickListener(new BoundSettingListener());
 
         // read data from Intent object
         Intent intent = getIntent();
