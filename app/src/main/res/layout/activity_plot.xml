@@ -37,7 +37,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="1.23456"
             android:id="@+id/textLowerBound"
             android:layout_alignParentTop="true"
             android:background="@drawable/border_ui"
@@ -67,7 +66,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="2.34567"
             android:id="@+id/textUpperBound"
             android:layout_below="@+id/textView2"
             android:layout_toRightOf="@+id/textView2"
@@ -87,8 +85,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_above="@+id/relativeLayout2"
-        android:layout_below="@+id/relativeLayout3" />
+        android:layout_below="@+id/relativeLayout3"
+        android:layout_above="@+id/textView3" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -105,7 +103,7 @@
             android:id="@+id/checkXLogScale"
             android:checked="false"
             android:textSize="12sp"
-            android:layout_below="@+id/textView3"
+            android:layout_above="@+id/checkYLogScale"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 
@@ -115,10 +113,11 @@
             android:text="Y-axis in transformed log scale"
             android:id="@+id/checkYLogScale"
             android:checked="false"
-            android:layout_below="@+id/checkXLogScale"
+            android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:visibility="gone" />
 
         <Button
             style="?android:attr/buttonStyleSmall"
@@ -130,18 +129,6 @@
             android:layout_alignParentEnd="true"
             android:layout_alignBottom="@+id/checkYLogScale" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Drag/zoom to find an intersection with X-axis."
-            android:id="@+id/textView3"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/buttonApply"
-            android:layout_alignEnd="@+id/buttonApply"
-            android:gravity="center" />
     </RelativeLayout>
 
     <TextView
@@ -169,5 +156,18 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Drag/zoom to find an intersection with X-axis."
+        android:id="@+id/textView3"
+        android:gravity="center"
+        android:layout_above="@+id/relativeLayout2"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/relativeLayout2"
+        android:layout_alignEnd="@+id/relativeLayout2" />
 
 </RelativeLayout>
