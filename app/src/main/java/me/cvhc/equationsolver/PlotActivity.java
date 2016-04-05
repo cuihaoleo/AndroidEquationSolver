@@ -17,7 +17,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.androidplot.xy.BoundaryMode;
@@ -35,9 +34,8 @@ import java.util.HashMap;
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private TextView textUpperBound, textLowerBound;
-    private TextView textLargeWarning;
     private XYPlot plot;
-    private CheckBox checkXLogScale, checkYLogScale;
+    private CheckBox checkXLogScale;
     private HashMap<Character, String> anotherSide;
     private SharedPreferences sharedPreferences;
 
@@ -54,17 +52,17 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             final DecimalSettingView settingView = new DecimalSettingView(PlotActivity.this);
             final String who;
 
-            double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
-            double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+            double realMinX = getRealMinX();
+            double readMaxX = getRealMaxX();
             final double thisValue, anotherValue;
 
             if (v == textLowerBound) {
-                thisValue = rminX;
-                anotherValue = rmaxX;
+                thisValue = realMinX;
+                anotherValue = readMaxX;
                 who = "Lower";
             } else if (v == textUpperBound) {
-                thisValue = rmaxX;
-                anotherValue = rminX;
+                thisValue = readMaxX;
+                anotherValue = realMinX;
                 who = "Upper";
             } else {
                 throw new RuntimeException();
@@ -130,13 +128,18 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
         // initialize View objects
         Button buttonApply = (Button)findViewById(R.id.buttonApply);
-        ImageButton buttonReset = (ImageButton)findViewById(R.id.buttonReset);
+        Button buttonReset = (Button)findViewById(R.id.buttonReset);
         textLowerBound = (TextView)findViewById(R.id.textLowerBound);
         textUpperBound = (TextView)findViewById(R.id.textUpperBound);
-        textLargeWarning = (TextView)findViewById(R.id.textLargeWarning);
         checkXLogScale = (CheckBox)findViewById(R.id.checkXLogScale);
-        checkYLogScale = (CheckBox)findViewById(R.id.checkYLogScale);
         plot = (XYPlot)findViewById(R.id.plot);
+
+        assert buttonApply != null;
+        assert buttonReset != null;
+        assert textLowerBound != null;
+        assert textUpperBound != null;
+        assert checkXLogScale != null;
+        assert plot != null;
 
         textLowerBound.setOnClickListener(new BoundSettingListener());
         textUpperBound.setOnClickListener(new BoundSettingListener());
@@ -194,8 +197,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 minX = checkXLogScale.isChecked() ? logScale(min) : min;
                 maxX = checkXLogScale.isChecked() ? logScale(max) : min;
 
-                if (minX >= maxX || Double.isInfinite(minX) || Double.isNaN(minX)
-                        || Double.isInfinite(maxX) || Double.isNaN(maxX)) {
+                if (minX >= maxX || !isNormal(minX) || !isNormal(maxX)) {
                     minX = checkXLogScale.isChecked() ? logScale(1e-14) : 0.0;
                     maxX = checkXLogScale.isChecked() ? 0.0 : 1.0;
                 }
@@ -219,8 +221,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 if (isChecked) {
                     minX = logScale(minX);
                     maxX = logScale(maxX);
-                    if (Double.isNaN(minX) || Double.isNaN(maxX)
-                            || Double.isInfinite(minX) || Double.isInfinite(maxX)) {
+                    if (!isNormal(minX) || !isNormal(maxX)) {
                         minX = logScale(Math.pow(10, -14.0));
                         maxX = 0.0;
                     }
@@ -229,14 +230,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     maxX = logScaleRecover(maxX);
                 }
 
-                mainSeries.resetCache();
-                updatePlotBound();
-            }
-        });
-
-        checkYLogScale.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mainSeries.resetCache();
                 updatePlotBound();
             }
@@ -257,8 +250,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.setRangeValueFormat(new CustomFormat() {
             @Override
             public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
-                double output = checkYLogScale.isChecked() ? log1pScaleRecover(value) : value;
-                return new StringBuffer(String.format("%6.4g", output));
+                return new StringBuffer(String.format("%6.4g", value));
             }
         });
 
@@ -274,8 +266,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 eval.setVariable('x', x);
                 ExpressionCalculator.OptionUnion op = eval.evaluate(' ');
 
-                double y = op.getValue();
-                return checkYLogScale.isChecked() ? log1pScale(y) : y;
+                return op.getValue();
             }
         }, prefPlot);
 
@@ -292,15 +283,15 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     }
 
     private void submitSelectRange() {
-        double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
-        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+        double realMinX = getRealMinX();
+        double realMaxX = getRealMaxX();
 
         final ExpressionCalculator eval = new ExpressionCalculator();
         for (Character c: anotherSide.keySet()) {
             eval.setVariable(c, anotherSide.get(c));
         }
 
-        new SolveTask(this, rminX, rmaxX).execute(new FunctionWrapper.MathFunction() {
+        new SolveTask(this, realMinX, realMaxX).execute(new FunctionWrapper.MathFunction() {
             @Override
             public double call(double x) {
                 eval.setVariable('x', x);
@@ -310,11 +301,11 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     }
 
     private void updatePlotBound() {
-        double rminX = checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
-        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+        double realMinX = getRealMinX();
+        double realMaxX = getRealMaxX();
 
-        textLowerBound.setText(String.format(getString(R.string.format_bound), rminX));
-        textUpperBound.setText(String.format(getString(R.string.format_bound), rmaxX));
+        textLowerBound.setText(String.format(getString(R.string.format_bound), realMinX));
+        textUpperBound.setText(String.format(getString(R.string.format_bound), realMaxX));
 
         mainSeries.setBound(minX, maxX);
         plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
@@ -326,18 +317,13 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         nZero = mainSeries.getNZero();
         plot.setRangeBoundaries(-scale, scale, BoundaryMode.FIXED);
 
-        if (mainSeries.isAllInvalid()) {
-            int color = ContextCompat.getColor(plot.getContext(), R.color.colorProhibition);
-            plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
-            textLargeWarning.setVisibility(View.VISIBLE);
-            textLargeWarning.setText("No valid value in this range.");
-        } else {
-            int color_id = nZero == 1 ? R.color.colorPermission : R.color.colorProhibition;
-            int color = ContextCompat.getColor(plot.getContext(), color_id);
-            plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
-            textLargeWarning.setVisibility(View.INVISIBLE);
+        int color_id = R.color.colorPermission;
+        if (mainSeries.isAllInvalid() || nZero != 1) {
+            color_id = R.color.colorProhibition;
         }
 
+        int color = ContextCompat.getColor(plot.getContext(), color_id);
+        plot.getGraphWidget().getGridBackgroundPaint().setColor(color);
         plot.redraw();
     }
 
@@ -395,10 +381,9 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         min = Math.min(min, mainSeries.getX(mainSeries.size() - 1).doubleValue());
         max = Math.max(max, mainSeries.getX(0).doubleValue());
 
-        double rminX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
-        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
-        if (min < max && !Double.isInfinite(rminX) && !Double.isNaN(rminX)
-                && !Double.isInfinite(rmaxX) && !Double.isNaN(rmaxX)) {
+        double realMinX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
+        double realMaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
+        if (min < max && isNormal(realMinX) && isNormal(realMaxX)) {
             minX = min;
             maxX = max;
         }
@@ -412,10 +397,9 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double min = minX + offset;
         double max = maxX + offset;
 
-        double rminX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
-        double rmaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
-        if (min < max && !Double.isInfinite(rminX) && !Double.isNaN(rminX)
-                && !Double.isInfinite(rmaxX) && !Double.isNaN(rmaxX)) {
+        double realMinX = checkXLogScale.isChecked() ? logScaleRecover(min) : min;
+        double realMaxX = checkXLogScale.isChecked() ? logScaleRecover(max) : max;
+        if (min < max && isNormal(realMinX) && isNormal(realMaxX)) {
             minX = min;
             maxX = max;
         }
@@ -427,20 +411,23 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         return Math.hypot(x, y);
     }
 
-    // log1p and log scale method
-    private static double log1pScale(double val) {
-        return Math.signum(val) * Math.log1p(Math.abs(val));
-    }
-
-    private static double log1pScaleRecover(double val) {
-        return Math.signum(val) * Math.expm1(Math.abs(val));
-    }
-
     private static double logScale(double val) {
         return Math.log(val);
     }
 
     private static double logScaleRecover(double val) {
         return Math.exp(val);
+    }
+
+    private double getRealMinX() {
+        return checkXLogScale.isChecked() ? logScaleRecover(minX) : minX;
+    }
+
+    private double getRealMaxX() {
+        return checkXLogScale.isChecked() ? logScaleRecover(maxX) : maxX;
+    }
+
+    private boolean isNormal(double n) {
+        return !(Double.isInfinite(n) || Double.isNaN(n));
     }
 }
