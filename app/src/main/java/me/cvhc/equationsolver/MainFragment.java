@@ -278,6 +278,7 @@ public class MainFragment extends Fragment {
         Keyboard keypad = new Keyboard(this.getActivity(), R.xml.keyboard);
         mEditInputNewExpression.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
+        mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
         mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from show up
         mEditInputNewExpression.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -300,7 +301,7 @@ public class MainFragment extends Fragment {
             @Override
             public void onChangeMode() {
                 hideKeypad();
-                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.showSoftInput(mEditInputNewExpression, 0);
                 //imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
@@ -315,9 +316,11 @@ public class MainFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    makeToast("Input the equation in the text box");
                     mEditInputNewExpression.setAdapter(mAutocompleteEquationAdapter);
                     mEditInputNewExpression.setHint(R.string.hint_input_equation);
                 } else {
+                    makeToast("Assign an ID in the text box");
                     mEditInputNewExpression.setAdapter(mAutocompleteAssignmentAdapter);
                     mEditInputNewExpression.setHint(R.string.hint_input_assignment);
                 }
@@ -325,7 +328,7 @@ public class MainFragment extends Fragment {
                 mEditInputNewExpression.setText("");
             }
         });
-        mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
+        mToggleInputType.setChecked(true);
 
         return rootView;
     }

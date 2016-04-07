@@ -69,7 +69,7 @@
     </Row>
 
     <Row>
-        <Key android:keyLabel="exp" android:keyOutputText="exp("
+        <Key android:keyLabel="e^" android:keyOutputText="exp("
             android:keyEdgeFlags="left" />
         <Key android:keyLabel="ln" android:keyOutputText="ln(" />
 

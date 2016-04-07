@@ -1,5 +1,7 @@
 package me.cvhc.equationsolver;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -37,25 +39,29 @@ public class MainActivity extends AppCompatActivity {
             bar.setDisplayShowTitleEnabled(false);
         }
 
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
-        spinner.setAdapter(new MyAdapter(
-                toolbar.getContext(),
-                new String[]{
-                        "Bisection",
-                        "Todo",
-                }));
+        Spinner spinner = (Spinner)findViewById(R.id.spinner);
+        if (spinner != null && toolbar != null) {
+            spinner.setAdapter(new MyAdapter(
+                    toolbar.getContext(),
+                    new String[]{
+                            "Bisection",
+                            "Todo",
+                    }));
 
-        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mCurrentFragment = MainFragment.newInstance(position + 1);
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.container, mCurrentFragment)
-                        .commit();
-            }
+            spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    mCurrentFragment = MainFragment.newInstance(position + 1);
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.container, mCurrentFragment)
+                            .commit();
+                }
 
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+        }
     }
 
     @Override
@@ -77,6 +83,19 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
+            case R.id.action_exit:
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.action_exit)
+                        .setMessage(R.string.confirm_exit)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                MainActivity.this.finish();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, null)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
+                        .show();
             default:
                 return super.onOptionsItemSelected(item);
         }

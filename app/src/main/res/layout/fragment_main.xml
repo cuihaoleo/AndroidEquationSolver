@@ -58,11 +58,12 @@
             android:ellipsize="none"
             android:dropDownVerticalOffset="-160dp"
             android:dropDownHeight="120dp"
-            android:hint="e = 2.71828"
+            android:hint="a = 2.0 sqrt(3)"
             android:layout_toRightOf="@+id/toggleInputType"
             android:layout_alignRight="@+id/recyclerView"
             android:layout_alignEnd="@+id/recyclerView"
-            android:layout_above="@+id/frameButtonSolve" />
+            android:layout_above="@+id/frameButtonSolve"
+            android:textColorHint="#AAA" />
 
         <ToggleButton
             android:layout_width="wrap_content"
