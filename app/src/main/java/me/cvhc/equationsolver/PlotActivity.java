@@ -275,15 +275,34 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 return op.getValue();
             }
         }, prefPlot);
-        resetY();
 
         plot.addSeries(new XYSeries() {
             final static int DIVIDE = 8;
-            @Override public int size() { return DIVIDE + 1; }
-            @Override public Number getX(int index) { return minX + (maxX-minX)/DIVIDE*index; }
-            @Override public Number getY(int index) { return 0.0; }
-            @Override public String getTitle() { return null; }
+
+            @Override
+            public int size() {
+                return DIVIDE + 1;
+            }
+
+            @Override
+            public Number getX(int index) {
+                return minX + (maxX - minX) / DIVIDE * index;
+            }
+
+            @Override
+            public Number getY(int index) {
+                return 0.0;
+            }
+
+            @Override
+            public String getTitle() {
+                return null;
+            }
         }, new LineAndPointFormatter(Color.rgb(255, 0, 0), null, null, null));
+
+        // do setBound manually to get initial Y scale
+        mainSeries.setBound(minX, maxX);
+        resetY();
 
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         updatePlotBound();
