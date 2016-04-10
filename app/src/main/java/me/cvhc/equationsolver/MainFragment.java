@@ -38,6 +38,7 @@ import android.widget.ToggleButton;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 
 import java.io.Serializable;
+import java.nio.ReadOnlyBufferException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -303,8 +304,8 @@ public class MainFragment extends Fragment {
             public void onChangeMode() {
                 hideKeypad();
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
                 imm.showSoftInput(mEditInputNewExpression, 0);
-                //imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
                 mActionBar.hide();
                 Snackbar.make(mEditInputNewExpression,
