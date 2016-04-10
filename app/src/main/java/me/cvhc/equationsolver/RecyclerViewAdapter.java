@@ -12,6 +12,8 @@ import java.util.HashMap;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private ArrayList<ExpressionHolder> items = new ArrayList<>();
+    private ArrayList<Double> savedResults = new ArrayList<>();
+
     private ExpressionCalculator globalEvaluator;
     private OnItemChangeListener onItemChangeListener;
     private Integer selectedEquation = null;
@@ -68,6 +70,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 holder.mCardView.setChecked(true);
 
                 if (globalEvaluator.setVariable(' ', h.expr)) {
+                    Double result = savedResults.get(position);
+
                     if (!isReady()) {
                         ExpressionCalculator.OptionUnion op = globalEvaluator.evaluate(' ');
                         ArrayList<Character> buf = new ArrayList<>();
@@ -80,6 +84,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                         warning = "Unknown constants: " + TextUtils.join(", ", buf);
                         sub = null;
+                    } else if (result != null) {
+                        sub = "Solution = " + result;
                     } else {
                         sub = "Ready to solve";
                     }
@@ -104,6 +110,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public void removeItem(int position) {
         items.remove(position);
+        savedResults.remove(position);
 
         if (selectedEquation != null && selectedEquation == position) {
             selectedEquation = null;
@@ -155,6 +162,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
 
         items.add(holder);
+        savedResults.add(null);
         return notifyChange();
     }
 
@@ -206,6 +214,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public void setOnItemChangeListener(OnItemChangeListener mListener) {
         onItemChangeListener = mListener;
+    }
+
+    public void setResult(double n) {
+        if (!Double.isNaN(n)) {
+            savedResults.set(selectedEquation, n);
+            notifyChange();
+        }
     }
 
     public HashMap<Character, String> pack() {

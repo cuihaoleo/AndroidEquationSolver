@@ -1,6 +1,7 @@
 package me.cvhc.equationsolver;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.inputmethodservice.Keyboard;
@@ -350,6 +351,16 @@ public class MainFragment extends Fragment {
 
         outState.putSerializable("ASSIGNMENT_HISTORY", assignmentHistory);
         outState.putSerializable("EQUATION_HISTORY", equationHistory);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0 && resultCode == Activity.RESULT_OK) {
+            double savedResult = data.getDoubleExtra("LAST_RESULT", Double.NaN);
+            mRecyclerViewAdapter.setResult(savedResult);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void showKeypad() {

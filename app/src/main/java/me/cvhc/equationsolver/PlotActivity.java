@@ -1,5 +1,6 @@
 package me.cvhc.equationsolver;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
@@ -42,6 +44,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
     private double maxAbsY;
+    private Double lastResult = null;
     private int nZero = 0;
 
     private static double SCALE_YAXIS = 1.12;
@@ -295,13 +298,21 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             eval.setVariable(c, anotherSide.get(c));
         }
 
-        new SolveTask(this, realMinX, realMaxX).execute(new FunctionWrapper.MathFunction() {
-            @Override
-            public double call(double x) {
-                eval.setVariable('x', x);
-                return eval.evaluate(' ').getValue();
-            }
-        });
+        try {
+            lastResult = new SolveTask(this, realMinX, realMaxX).execute(new FunctionWrapper.MathFunction() {
+                @Override
+                public double call(double x) {
+                    eval.setVariable('x', x);
+                    return eval.evaluate(' ').getValue();
+                }
+            }).get();
+        } catch (ExecutionException | InterruptedException e) {
+            lastResult = null;
+        }
+
+        Intent resultData = new Intent();
+        resultData.putExtra("LAST_RESULT", lastResult);
+        setResult(Activity.RESULT_OK, resultData);
     }
 
     private void updatePlotBound() {
