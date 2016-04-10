@@ -41,6 +41,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
+    private double maxAbsY;
     private int nZero = 0;
 
     private static double SCALE_YAXIS = 1.12;
@@ -202,6 +203,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     maxX = checkXLogScale.isChecked() ? 0.0 : 1.0;
                 }
 
+                resetY();
                 updatePlotBound();
             }
         });
@@ -230,6 +232,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     maxX = logScaleRecover(maxX);
                 }
 
+                resetY();
                 mainSeries.resetCache();
                 updatePlotBound();
             }
@@ -269,6 +272,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 return op.getValue();
             }
         }, prefPlot);
+        resetY();
 
         plot.addSeries(new XYSeries() {
             final static int DIVIDE = 8;
@@ -310,12 +314,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         mainSeries.setBound(minX, maxX);
         plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
 
-        double minY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMinY();
-        double maxY = mainSeries.isAllInvalid() ? 1.0/SCALE_YAXIS : mainSeries.getMaxY();
-        double scale = SCALE_YAXIS * Math.max(Math.abs(minY), Math.abs(maxY));
-
         nZero = mainSeries.getNZero();
-        plot.setRangeBoundaries(-scale, scale, BoundaryMode.FIXED);
+        plot.setRangeBoundaries(-maxAbsY, maxAbsY, BoundaryMode.FIXED);
 
         int color_id = R.color.colorPermission;
         if (mainSeries.isAllInvalid() || nZero != 1) {
@@ -361,13 +361,27 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 } else if (mode == TWO_FINGERS_DRAG) {
                     double oldDist = distBetweenFingers;
                     distBetweenFingers = spacing(event);
-                    zoom(oldDist / distBetweenFingers);
+
+                    if (onDirectionX(event)) {
+                        zoom(oldDist / distBetweenFingers);
+                    } else {
+                        maxAbsY *= oldDist / distBetweenFingers;
+                    }
                 }
 
                 updatePlotBound();
                 break;
         }
         return true;
+    }
+
+    private void resetY() {
+        if (mainSeries.isAllInvalid()) {
+            maxAbsY = 1.0;
+        } else {
+            maxAbsY = Math.max(Math.abs(mainSeries.getMaxY()), Math.abs(mainSeries.getMinY()));
+            maxAbsY *= SCALE_YAXIS;
+        }
     }
 
     private void zoom(double scale) {
@@ -409,6 +423,12 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double x = event.getX(0) - event.getX(1);
         double y = event.getY(0) - event.getY(1);
         return Math.hypot(x, y);
+    }
+
+    private boolean onDirectionX(MotionEvent event) {
+        double x = event.getX(0) - event.getX(1);
+        double y = event.getY(0) - event.getY(1);
+        return Math.abs(y) < Math.abs(x);
     }
 
     private static double logScale(double val) {
