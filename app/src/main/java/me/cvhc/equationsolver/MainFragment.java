@@ -37,8 +37,6 @@ import android.widget.ToggleButton;
 
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 
-import java.io.Serializable;
-import java.nio.ReadOnlyBufferException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -57,6 +55,7 @@ public class MainFragment extends Fragment {
 
     private ToggleButton mToggleInputType;
     private Button mButtonSolve;
+    private Button mButtonAdd;
     private ExpressionKeypad mExpressionKeypad;
     private View mDummy;
 
@@ -74,6 +73,7 @@ public class MainFragment extends Fragment {
         public void afterTextChanged(Editable s) {
             String str = s.toString();
 
+            mButtonAdd.setVisibility(str.length() > 0 ? View.VISIBLE : View.GONE);
             if (mToggleInputType.isChecked() || str.length() == 0) {
                 return;
             }
@@ -156,21 +156,27 @@ public class MainFragment extends Fragment {
         @Override
         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
             if (actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                if (mRecyclerViewAdapter.newItem(v.getText(), mToggleInputType.isChecked())) {
-                    mRecyclerView.smoothScrollToPosition(mRecyclerViewAdapter.getItemCount() - 1);
-
-                    if (mToggleInputType.isChecked()) {
-                        mAutocompleteEquationAdapter.insert(v.getText().toString(), 0);
-                    } else {
-                        mAutocompleteAssignmentAdapter.insert(v.getText().toString(), 0);
-                    }
-
-                    v.setText("");
-                    return true;
-                }
-                makeToast(R.string.error_illegal_expression);
+                return submitNewExpression(v);
             }
 
+            return false;
+        }
+    }
+
+    private boolean submitNewExpression(TextView v) {
+        if (mRecyclerViewAdapter.newItem(v.getText(), mToggleInputType.isChecked())) {
+            mRecyclerView.smoothScrollToPosition(mRecyclerViewAdapter.getItemCount() - 1);
+
+            if (mToggleInputType.isChecked()) {
+                mAutocompleteEquationAdapter.insert(v.getText().toString(), 0);
+            } else {
+                mAutocompleteAssignmentAdapter.insert(v.getText().toString(), 0);
+            }
+
+            v.setText("");
+            return true;
+        } else {
+            makeToast(R.string.error_illegal_expression);
             return false;
         }
     }
@@ -186,16 +192,16 @@ public class MainFragment extends Fragment {
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         mActionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
         mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
+        mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mDummy = rootView.findViewById(R.id.dummyFocus);
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
-
 
         ArrayList<String> equationHistory = new ArrayList<>();
         ArrayList<String> assignmentHistory = new ArrayList<>();
@@ -261,6 +267,13 @@ public class MainFragment extends Fragment {
             }
         });
 
+        mButtonAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                submitNewExpression(mEditInputNewExpression);
+            }
+        });
+
         mRecyclerViewAdapter = new RecyclerViewAdapter();
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
             @Override
@@ -310,6 +323,18 @@ public class MainFragment extends Fragment {
                 mActionBar.hide();
                 Snackbar.make(mEditInputNewExpression,
                         R.string.reopen_keyboard, Snackbar.LENGTH_SHORT).show();
+
+                // a workaround to detect system IME disappearing
+                rootView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        if (bottom > oldBottom * 1.2) {
+                            syncIMEState();
+                            mRecyclerView.removeOnLayoutChangeListener(this);
+                        }
+                    }
+                });
             }
         });
         mExpressionKeypad.setOnKeyboardActionListener(listener);
@@ -387,19 +412,24 @@ public class MainFragment extends Fragment {
         if (mExpressionKeypad.getVisibility() == View.VISIBLE) {  // app keypad is open
             hideKeypad();
             mDummy.requestFocus();
-        } else {
-            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm.isAcceptingText()) {  // OS IME is open, close it
-                mActionBar.show();
-                imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
-                mDummy.requestFocus();
-            } else if (mEditInputNewExpression.isFocused()) {  // App-keyboard state is broken, reset it
-                mDummy.requestFocus();
-            } else {  // no keyboard, try exit
-                return !tryExit();
-            }
+        } else if (!syncIMEState()) {
+            return !tryExit();
         }
+        return true;
+    }
 
+    private boolean syncIMEState() {
+        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isAcceptingText()) {  // OS IME is open, close it
+            mActionBar.show();
+            imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
+            mDummy.requestFocus();
+        } else if (mEditInputNewExpression.isFocused()) {  // App-keyboard state is broken, reset it
+            mActionBar.show();
+            mDummy.requestFocus();
+        } else {  // no keyboard, try exit
+            return false;
+        }
         return true;
     }
 
