@@ -47,24 +47,6 @@
             <requestFocus />
         </LinearLayout>
 
-        <AutoCompleteTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editInputNewExpression"
-            android:singleLine="true"
-            android:imeOptions="actionDone"
-            android:inputType="textNoSuggestions"
-            android:scrollHorizontally="false"
-            android:ellipsize="none"
-            android:dropDownVerticalOffset="-160dp"
-            android:dropDownHeight="120dp"
-            android:hint="a = 2.0 sqrt(3)"
-            android:layout_toRightOf="@+id/toggleInputType"
-            android:layout_alignRight="@+id/recyclerView"
-            android:layout_alignEnd="@+id/recyclerView"
-            android:layout_above="@+id/frameButtonSolve"
-            android:textColorHint="#AAA" />
-
         <ToggleButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -78,6 +60,41 @@
             android:layout_alignParentStart="true"
             android:layout_below="@+id/recyclerView"
             android:layout_above="@+id/frameButtonSolve" />
+
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/editInputNewExpression"
+            android:singleLine="true"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions"
+            android:scrollHorizontally="false"
+            android:ellipsize="none"
+            android:dropDownVerticalOffset="-160dp"
+            android:dropDownHeight="120dp"
+            android:hint="a = 2.0 sqrt(3)"
+            android:layout_toRightOf="@+id/toggleInputType"
+            android:layout_toEndOf="@+id/toggleInputType"
+            android:layout_above="@+id/frameButtonSolve"
+            android:textColorHint="#AAA"
+            android:layout_toLeftOf="@+id/buttonAdd"
+            android:layout_toStartOf="@+id/buttonAdd" />
+
+        <Button
+            style="@style/Base.Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+"
+            android:id="@+id/buttonAdd"
+            android:layout_alignBottom="@+id/editInputNewExpression"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:minHeight="0dp"
+            android:minWidth="48dp"
+            android:layout_below="@+id/recyclerView"
+            android:typeface="sans"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <FrameLayout
             android:id="@+id/frameButtonSolve"
