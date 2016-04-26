@@ -235,8 +235,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                     maxX = logScaleRecover(maxX);
                 }
 
-                resetY();
                 mainSeries.resetCache();
+                resetY();
                 updatePlotBound();
             }
         });
@@ -300,10 +300,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             }
         }, new LineAndPointFormatter(Color.rgb(255, 0, 0), null, null, null));
 
-        // do setBound manually to get initial Y scale
-        mainSeries.setBound(minX, maxX);
         resetY();
-
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         updatePlotBound();
     }
@@ -406,6 +403,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     }
 
     private void resetY() {
+        mainSeries.setBound(minX, maxX);
         if (mainSeries.isAllInvalid()) {
             maxAbsY = 1.0;
         } else {
