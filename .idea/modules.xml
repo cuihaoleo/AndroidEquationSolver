@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AndroidEquationSolver.iml" filepath="$PROJECT_DIR$/AndroidEquationSolver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/EquationSolver.iml" filepath="$PROJECT_DIR$/EquationSolver.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
