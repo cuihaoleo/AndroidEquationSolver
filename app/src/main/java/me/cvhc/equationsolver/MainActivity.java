@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
+            case R.id.action_help:
+                startActivity(new Intent(this, HelpActivity.class));
+                return true;
             case R.id.action_exit:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.action_exit)

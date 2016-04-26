@@ -32,4 +32,6 @@
     <string name="error_invalid_id" formatted="false">%c is not a valid ID</string>
     <string name="action_exit">Exit</string>
     <string name="confirm_exit">Do you really want to exit?</string>
+    <string name="title_activity_help">Help</string>
+    <string name="action_help">Help</string>
 </resources>
