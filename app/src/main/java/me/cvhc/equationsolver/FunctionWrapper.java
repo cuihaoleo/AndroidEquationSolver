@@ -8,7 +8,17 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 
+/**
+ * FunctionWrapper wraps an unary math function (MathFunction class) to an
+ * XYSeries object, so the function can be plotted by AndroidPlot library.
+ *
+ * The series is sampled in the interval [lowerBound, upperBound]. To support
+ * dynamic change of plot range, call setBound(l, u) to edit the interval and
+ * re-sample the series.
+ */
 public class FunctionWrapper implements XYSeries {
+
+    // A command pattern interface to wrap an unary math function
     public interface MathFunction {
         double call(double x);
     }
@@ -31,6 +41,14 @@ public class FunctionWrapper implements XYSeries {
         seriesCache.addLast(new Pair<Double, Double>(Double.POSITIVE_INFINITY, null));
     }
 
+    /**
+     * Set the bound of sampling and (re-)sample the series. To save time, old
+     * sampling results will be reused as many as possible. So we don't require
+     * to sample uniformly, but one sample in a uniformly partitioned interval.
+     *
+     * @param l Lower bound of sampling
+     * @param u Upper bound of sampling
+     */
     public void setBound(Double l, Double u) {
         if (l != null) { lowerBound = l; }
         if (u != null) { upperBound = u; }
@@ -120,13 +138,11 @@ public class FunctionWrapper implements XYSeries {
 
     @Override
     public Number getX(int index) {
-        //return lowerBound + step * index;
         return series[index].first;
     }
 
     @Override
     public Number getY(int index) {
-        //return function.call(getX(index).doubleValue());
         Double d = series[index].second;
         if (Double.isNaN(d) || Double.isInfinite(d)) {
             return allInvalid ? 0 : null;
@@ -137,6 +153,6 @@ public class FunctionWrapper implements XYSeries {
 
     @Override
     public String getTitle() {
-        return "What title?";
+        return "";
     }
 }

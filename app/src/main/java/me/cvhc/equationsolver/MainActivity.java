@@ -32,38 +32,41 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        assert toolbar != null;
         setSupportActionBar(toolbar);
 
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setDisplayShowTitleEnabled(false);
-        }
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.setDisplayShowTitleEnabled(false);
 
-        Spinner spinner = (Spinner)findViewById(R.id.spinner);
-        if (spinner != null && toolbar != null) {
-            spinner.setAdapter(new MyAdapter(
-                    toolbar.getContext(),
-                    new String[]{
-                            "Bisection",
-                            "Todo",
-                    }));
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        assert spinner != null;
+        spinner.setAdapter(new MyAdapter(
+                toolbar.getContext(),
+                new String[]{
+                        "Bisection",
+                        "Todo",  // TODO: Implement another solving method
+                }));
 
-            spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    mCurrentFragment = MainFragment.newInstance(position + 1);
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.container, mCurrentFragment)
-                            .commit();
-                }
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mCurrentFragment = MainFragment.newInstance(position + 1);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container, mCurrentFragment)
+                        .commit();
+            }
 
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-            });
-        }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        });
     }
 
+    /**
+     * Call onBackPressed method of MainFragment. If fragment's returns false,
+     * superclass's onBackPressed is called to terminate the app.
+     *
+     * This allows fragment to "override" this method.
+     */
     @Override
     public void onBackPressed() {
         if (!mCurrentFragment.onBackPressed()) {

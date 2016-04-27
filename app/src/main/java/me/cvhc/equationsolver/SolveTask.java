@@ -5,14 +5,21 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
-import android.view.View;
-import android.widget.TextView;
 
+/**
+ * SolveTask performs bisection method to solve equation F(x)=0 in background.
+ *
+ * When running, a progress dialog is showed and allows user to cancel the task.
+ * If it finds a solution, the task will end successfully and show the solution
+ * in a DecimalSettingView wrapped by an AlertDialog.
+ */
 public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, Double> {
     private Activity parentActivity;
     private double lowerROI, upperROI;
     private ProgressDialog progressDialog;
     private FunctionWrapper.MathFunction func;
+
+    private OnResultListener mOnResultListener = null;
 
     private final static int MAX_PROGRESS = 1000;
     private static final int MAX_PARTITION = 16384;
@@ -43,19 +50,39 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
         progressDialog.show();
     }
 
+    /**
+     * Bisection method, running in background thread. It tries to solve
+     * equation F(x)=0 in the interval [lowerROI, upperROI]. The function F(x)
+     * is wrapped in a MathFunction object.
+     *
+     * @param functions The function F(x) representing the equation
+     * @return Any root of F(x)=0 in the interval, can be null if no root found.
+     */
     @Override
     protected Double doInBackground(FunctionWrapper.MathFunction... functions) {
         if (functions.length != 1) {
             throw new RuntimeException();
+        } else {
+            func = functions[0];
         }
 
-        func = functions[0];
         Boolean signIsPositive = null;
         Double savedX1 = null, savedX2 = null;
         double partition = 1.0;
         double width = upperROI - lowerROI;
         Double result = null;
 
+        /**
+         * First, find a pair of x1, x2 (savedX1 and savedX2) which make F(x1)
+         * and F(x2) have opposite signs.
+         *
+         * If x1=upperROI and x2=lowerROI works, the loop exit immediately. Or
+         * else it divides the interval [lowerROI, upperROI] to 2, 4, 8... 2^n
+         * (2^n<=MAX_PARTITION) partitions and iterates every partition point to
+         * detect sign change.
+         *
+         * If no such x1, x2 in the range, the loop can waste a lot of time.
+         */
         Double y1 = func.call(lowerROI);
         if (!y1.isNaN()) {
             signIsPositive = y1 > 0;
@@ -95,6 +122,16 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
 
         publishProgress(0.5);
 
+        /**
+         * Second, perform Bisection method in the interval [x1, x2]. The loop
+         * stops when:
+         *     1. Meet a point x where F(x)=0.0 exactly
+         *     2. Bisection doesn't shrink the interval [lo, hi] (due to the
+         *        precision limit of Double type)
+         *
+         * If final result x makes F(x) < ACCEPT_ERROR (a very small positive
+         * number), it is accepted and returned. Or else null is returned.
+         */
         double lo = Math.min(savedX1, savedX2);
         double hi = Math.max(savedX1, savedX2);
 
@@ -141,6 +178,10 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
     protected void onPostExecute(Double result) {
         progressDialog.dismiss();
 
+        if (mOnResultListener != null) {
+            mOnResultListener.onResult(result);
+        }
+
         if (result == null) {
             new AlertDialog.Builder(parentActivity)
                     .setTitle(R.string.result)
@@ -164,5 +205,13 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
             alert.setView(displayView);
             alert.show();
         }
+    }
+
+    public interface OnResultListener {
+        void onResult(Double result);
+    }
+
+    public void setOnResultListener(OnResultListener listener) {
+        mOnResultListener = listener;
     }
 }

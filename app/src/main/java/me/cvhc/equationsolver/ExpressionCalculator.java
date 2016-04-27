@@ -39,7 +39,7 @@ public class ExpressionCalculator {
     }
 
     public boolean setVariable(Character c, Double val) {
-        // todo: this will lose precision
+        // TODO: this will lose precision
         return setVariable(c, val.toString());
     }
 
@@ -71,7 +71,33 @@ public class ExpressionCalculator {
         return true;
     }
 
-    // topological sort (DFS) to determine the order of evaluating
+    /**
+     * Performs topological sort on each ID (variable) assigned. This is
+     * required before evaluation to find a suitable order of evaluation.
+     *
+     * Implements a straight depth-first search algorithm. DFS code is in the
+     * _topologicalSort() method below.
+     *
+     * @return Topological ordering of evaluation stored in an ArrayList, can
+     * be null if no valid ordering.
+     */
+    private ArrayList<Character> topologicalSort() {
+        ArrayList<Character> result = new ArrayList<>();
+        HashSet<Character> marked = new HashSet<>();
+
+        for (Character c : mIDList.keySet()) {
+            if (!result.contains(c)) {
+                if (!_topologicalSort(mIDList.get(c), result, marked)) {
+                    return null;
+                } else {
+                    result.add(c);
+                }
+            }
+        }
+
+        return result;
+    }
+
     private boolean _topologicalSort(ExpressionRenderer expr,
                                      ArrayList<Character> result,
                                      HashSet<Character> marked) {
@@ -96,23 +122,6 @@ public class ExpressionCalculator {
         }
 
         return true;
-    }
-
-    private ArrayList<Character> topologicalSort() {
-        ArrayList<Character> result = new ArrayList<>();
-        HashSet<Character> marked = new HashSet<>();
-
-        for (Character c : mIDList.keySet()) {
-            if (!result.contains(c)) {
-                if (!_topologicalSort(mIDList.get(c), result, marked)) {
-                    return null;
-                } else {
-                    result.add(c);
-                }
-            }
-        }
-
-        return result;
     }
 
     public OptionUnion evaluate(Character id) {

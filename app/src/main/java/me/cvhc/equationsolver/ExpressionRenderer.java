@@ -10,6 +10,12 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 
 import java.util.HashSet;
 
+
+/**
+ * Represents a math expression. It parses and turn the expression into ASTree.
+ * It also renders the plain math expression in a more human-readable form by
+ * utilizing HTML.
+ */
 public class ExpressionRenderer {
     private HashSet<Character> mDepends;
     private boolean mErrorFlag = false;
