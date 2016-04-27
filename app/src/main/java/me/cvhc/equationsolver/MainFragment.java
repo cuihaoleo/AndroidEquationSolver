@@ -81,7 +81,7 @@ public class MainFragment extends Fragment {
             char id = str.charAt(0);
             String prefix = id + " = ";
 
-            if (!Character.isLowerCase(id)) {
+            if (!Character.isLowerCase(id) || id == 'x') {
                 makeToast(String.format(getString(R.string.error_invalid_id), id));
                 mEditInputNewExpression.setText("");
                 return;
@@ -123,7 +123,6 @@ public class MainFragment extends Fragment {
         }
     }
 
-
     private class SwipeListener implements SwipeableRecyclerViewTouchListener.SwipeListener {
         @Override
         public boolean canSwipeLeft(int position) {
@@ -155,11 +154,12 @@ public class MainFragment extends Fragment {
     private class FinishEditListener implements EditText.OnEditorActionListener {
         @Override
         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-            if (actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                    event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                 return submitNewExpression(v);
+            } else {
+                return false;
             }
-
-            return false;
         }
     }
 
