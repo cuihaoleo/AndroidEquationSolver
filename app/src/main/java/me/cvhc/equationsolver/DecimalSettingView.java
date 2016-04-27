@@ -92,8 +92,12 @@ public class DecimalSettingView extends FrameLayout {
     }
 
     public void setEditable(boolean editable) {
+        int style = editable ? android.R.drawable.edit_text
+                             : android.R.drawable.editbox_background_normal;
         editExponent.setFocusable(editable);
+        editExponent.setBackgroundResource(style);
         editCoefficient.setFocusable(editable);
+        editCoefficient.setBackgroundResource(style);
     }
 
     public interface OnInputValueChangedListener {
@@ -121,10 +125,10 @@ public class DecimalSettingView extends FrameLayout {
 
             if (Double.isNaN(val)) {
                 textWarning.setVisibility(View.VISIBLE);
-                textWarning.setText("Invalid number format");
+                textWarning.setText(R.string.warning_invalid_format);
             } else if (Math.abs(val) > mAbsMax || Double.isInfinite(val)) {
                 textWarning.setVisibility(View.VISIBLE);
-                textWarning.setText("Input number is too big");
+                textWarning.setText(R.string.warning_number_too_big);
             } else {
                 textWarning.setVisibility(View.INVISIBLE);
             }

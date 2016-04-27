@@ -34,4 +34,6 @@
     <string name="confirm_exit">Do you really want to exit?</string>
     <string name="title_activity_help">Help</string>
     <string name="action_help">Help</string>
+    <string name="warning_invalid_format">Invalid number format</string>
+    <string name="warning_number_too_big">Input number is too big</string>
 </resources>
