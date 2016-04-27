@@ -20,6 +20,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -203,7 +204,9 @@ public class MainFragment extends Fragment {
         mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mDummy = rootView.findViewById(R.id.dummyFocus);
+
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
+        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 40);
 
         ArrayList<String> equationHistory = new ArrayList<>();
         ArrayList<String> assignmentHistory = new ArrayList<>();
