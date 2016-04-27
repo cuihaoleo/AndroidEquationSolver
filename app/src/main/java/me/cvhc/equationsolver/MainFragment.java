@@ -250,6 +250,10 @@ public class MainFragment extends Fragment {
             }
         });
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            mEditInputNewExpression.setOnTouchListener(null);
+        }
+
         mEditInputNewExpression.setOnEditorActionListener(new FinishEditListener());
         mEditInputNewExpression.addTextChangedListener(new CustomTextWatcher());
 
