@@ -86,6 +86,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                                 maxX = checkXLogScale.isChecked() ? logScale(n) : n;
                             }
 
+                            resetY();
                             updatePlotBound();
                         }
                     })
