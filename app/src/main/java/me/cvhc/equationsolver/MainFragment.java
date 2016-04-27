@@ -1,10 +1,12 @@
 package me.cvhc.equationsolver;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.inputmethodservice.Keyboard;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -294,7 +296,10 @@ public class MainFragment extends Fragment {
         mEditInputNewExpression.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
         mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
-        mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from show up
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // this will prevent IME from show up
+            mEditInputNewExpression.setTextIsSelectable(true);
+        }
         mEditInputNewExpression.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -325,16 +330,18 @@ public class MainFragment extends Fragment {
                         R.string.reopen_keyboard, Snackbar.LENGTH_SHORT).show();
 
                 // a workaround to detect system IME disappearing
-                rootView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-                    @Override
-                    public void onLayoutChange(View v, int left, int top, int right, int bottom,
-                                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                        if (bottom > oldBottom * 1.2) {
-                            syncIMEState();
-                            mRecyclerView.removeOnLayoutChangeListener(this);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    rootView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                        @Override
+                        public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                                   int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                            if (bottom > oldBottom * 1.2) {
+                                syncIMEState();
+                                mRecyclerView.removeOnLayoutChangeListener(this);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         });
         mExpressionKeypad.setOnKeyboardActionListener(listener);

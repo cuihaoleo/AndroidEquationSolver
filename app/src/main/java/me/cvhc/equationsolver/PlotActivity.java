@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
@@ -173,7 +174,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                 }
 
                 if (warning != null) {
-                    new AlertDialog.Builder(PlotActivity.this)
+                    AlertDialog.Builder alert = new AlertDialog.Builder(PlotActivity.this)
                             .setTitle(android.R.string.dialog_alert_title)
                             .setMessage(warning)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -183,9 +184,11 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                                     submitSelectRange();
                                 }
                             })
-                            .setNegativeButton(android.R.string.no, null)
-                            .setIconAttribute(android.R.attr.alertDialogIcon)
-                            .show();
+                            .setNegativeButton(android.R.string.no, null);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        alert.setIconAttribute(android.R.attr.alertDialogIcon);
+                    }
+                    alert.show();
                 } else {
                     submitSelectRange();
                 }

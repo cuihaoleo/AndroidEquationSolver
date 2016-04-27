@@ -3,6 +3,7 @@ package me.cvhc.equationsolver;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -84,24 +85,28 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings:
-                startActivity(new Intent(this, SettingsActivity.class));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    startActivity(new Intent(this, SettingsActivity.class));
+                }
                 return true;
             case R.id.action_help:
                 startActivity(new Intent(this, HelpActivity.class));
                 return true;
             case R.id.action_exit:
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.action_exit)
-                        .setMessage(R.string.confirm_exit)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                MainActivity.this.finish();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, null)
-                        .setIconAttribute(android.R.attr.alertDialogIcon)
-                        .show();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    new AlertDialog.Builder(this)
+                            .setTitle(R.string.action_exit)
+                            .setMessage(R.string.confirm_exit)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    MainActivity.this.finish();
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, null)
+                            .setIconAttribute(android.R.attr.alertDialogIcon)
+                            .show();
+                }
             default:
                 return super.onOptionsItemSelected(item);
         }

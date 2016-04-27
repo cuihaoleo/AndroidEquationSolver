@@ -1,9 +1,11 @@
 package me.cvhc.equationsolver;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
@@ -14,6 +16,7 @@ import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
 
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class SettingsActivity extends AppCompatPreferenceActivity {
     private SettingsFragment fragment;
 

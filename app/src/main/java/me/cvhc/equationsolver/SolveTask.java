@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.os.Build;
 
 /**
  * SolveTask performs bisection method to solve equation F(x)=0 in background.
@@ -38,7 +39,9 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
         progressDialog.setCancelable(false);
         progressDialog.setMax(MAX_PROGRESS);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setProgressNumberFormat(null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            progressDialog.setProgressNumberFormat(null);
+        }
         progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
                 parentActivity.getString(android.R.string.cancel),
                 new DialogInterface.OnClickListener() {
@@ -165,7 +168,9 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
 
     @Override
     protected void onCancelled(Double aDouble) {
-        super.onCancelled(aDouble);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            super.onCancelled(aDouble);
+        }
         progressDialog.dismiss();
     }
 
@@ -183,21 +188,31 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
         }
 
         if (result == null) {
-            new AlertDialog.Builder(parentActivity)
+            AlertDialog.Builder alert = new AlertDialog.Builder(parentActivity)
                     .setTitle(R.string.result)
                     .setMessage(R.string.no_result)
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.alertDialogIcon)
-                    .show();
+                    .setPositiveButton(android.R.string.yes, null);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                alert.setIconAttribute(android.R.attr.alertDialogIcon);
+            }
+            alert.show();
         } else {
             double error = func.call(result);
 
             AlertDialog.Builder alert = new AlertDialog.Builder(parentActivity)
                     .setTitle(R.string.solution)
-                    .setPositiveButton(android.R.string.yes, null)
-                    .setIconAttribute(android.R.attr.dialogIcon);
+                    .setPositiveButton(android.R.string.yes, null);
 
-            DecimalSettingView displayView = new DecimalSettingView(alert.getContext());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                alert.setIconAttribute(android.R.attr.dialogIcon);
+            }
+
+            DecimalSettingView displayView = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+                displayView = new DecimalSettingView(alert.getContext());
+            } else {
+                displayView = new DecimalSettingView(parentActivity);
+            }
             displayView.setInputValue(result);
             displayView.setEditable(false);
             displayView.setWarning(String.format("Error = " + parentActivity.getString(R.string.format_bound), error));
