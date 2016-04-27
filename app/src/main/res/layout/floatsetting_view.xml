@@ -18,7 +18,8 @@
             android:hint="0.0"
             android:singleLine="true"
             android:maxLength="12"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:gravity="fill_vertical|right"/>
 
         <TextView
             android:layout_width="wrap_content"
