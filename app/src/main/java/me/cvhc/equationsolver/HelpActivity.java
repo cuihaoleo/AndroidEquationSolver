@@ -31,6 +31,21 @@ public class HelpActivity extends AppCompatActivity {
         ViewPager viewPager = (ViewPager) findViewById(R.id.container);
         assert viewPager != null;
         viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+
+        ViewPager.OnPageChangeListener pageChangeListener = new ViewPager.OnPageChangeListener() {
+            @Override public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+            @Override public void onPageScrollStateChanged(int state) { }
+
+            @Override public void onPageSelected(int position) {
+                HelpActivity.this.setTitle(
+                        String.format(
+                                getString(R.string.title_help_activity),
+                                position + 1, N_PAGES));
+            }
+        };
+
+        viewPager.addOnPageChangeListener(pageChangeListener);
+        pageChangeListener.onPageSelected(0);
     }
 
     public static class PlaceholderFragment extends Fragment {
