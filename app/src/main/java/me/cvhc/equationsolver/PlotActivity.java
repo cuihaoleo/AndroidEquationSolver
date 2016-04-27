@@ -30,7 +30,6 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
 
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
@@ -180,6 +179,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
                                     submitSelectRange();
                                 }
                             })
@@ -314,21 +314,27 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             eval.setVariable(c, anotherSide.get(c));
         }
 
-        try {
-            lastResult = new SolveTask(this, realMinX, realMaxX).execute(new FunctionWrapper.MathFunction() {
-                @Override
-                public double call(double x) {
-                    eval.setVariable('x', x);
-                    return eval.evaluate(' ').getValue();
-                }
-            }).get();
-        } catch (ExecutionException | InterruptedException e) {
-            lastResult = null;
-        }
+        SolveTask task = new SolveTask(this, realMinX, realMaxX);
 
-        Intent resultData = new Intent();
-        resultData.putExtra("LAST_RESULT", lastResult);
-        setResult(Activity.RESULT_OK, resultData);
+        // Don't use AsyncTask.get() to retrieve result, it will block main UI
+        task.setOnResultListener(new SolveTask.OnResultListener() {
+            @Override
+            public void onResult(Double result) {
+                if (result != null) {
+                    Intent resultData = new Intent();
+                    resultData.putExtra("LAST_RESULT", lastResult);
+                    setResult(Activity.RESULT_OK, resultData);
+                }
+            }
+        });
+
+        task.execute(new FunctionWrapper.MathFunction() {
+            @Override
+            public double call(double x) {
+                eval.setVariable('x', x);
+                return eval.evaluate(' ').getValue();
+            }
+        });
     }
 
     private void updatePlotBound() {
