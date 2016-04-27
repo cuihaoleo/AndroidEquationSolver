@@ -44,7 +44,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
     private double maxAbsY;
-    private Double lastResult = null;
     private int nZero = 0;
 
     private static double SCALE_YAXIS = 1.12;
@@ -326,8 +325,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             public void onResult(Double result) {
                 if (result != null) {
                     Intent resultData = new Intent();
-                    resultData.putExtra("LAST_RESULT", lastResult);
-                    setResult(Activity.RESULT_OK, resultData);
+                    resultData.putExtra("LAST_RESULT", result);
+                    PlotActivity.this.setResult(Activity.RESULT_OK, resultData);
                 }
             }
         });
