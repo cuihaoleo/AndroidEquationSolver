@@ -37,4 +37,5 @@
     <string name="warning_invalid_format">Invalid number format</string>
     <string name="warning_number_too_big">Input number is too big</string>
     <string name="title_help_activity" formatted="false">Help (%d/%d)</string>
+    <string name="error_invalid_number_format">Invalid number format</string>
 </resources>

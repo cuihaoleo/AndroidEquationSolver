@@ -106,6 +106,7 @@ public class MainFragment extends Fragment {
         public CharSequence filter(CharSequence source, int start, int end,
                                    Spanned dest, int dstart, int dend) {
             boolean meetEqual = dest.toString().indexOf('=') != -1;
+            char prev = dend > 0 ? dest.toString().charAt(dend - 1) : 0;
 
             for (int i = start; i < end; i++) {
                 char c = source.charAt(i);
@@ -117,6 +118,9 @@ public class MainFragment extends Fragment {
                 } else if (!Character.isLetter(c) && !Character.isDigit(c)
                         && ".=+-*/^() ".indexOf(c) == -1) {
                     makeToast(R.string.error_illegal_char);
+                    return "";
+                } else if (c == 'E' && !Character.isDigit(prev)) {
+                    makeToast(R.string.error_invalid_number_format);
                     return "";
                 }
             }
