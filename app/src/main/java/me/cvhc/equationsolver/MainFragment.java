@@ -32,6 +32,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -59,6 +61,8 @@ public class MainFragment extends Fragment {
     private Button mButtonAdd;
     private ExpressionKeypad mExpressionKeypad;
     private View mDummy;
+
+    private TabHost mTabHost;
 
     private Toast mToast;
     private boolean mDoubleBackToExitPressedOnce = false;
@@ -205,6 +209,7 @@ public class MainFragment extends Fragment {
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
         mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
+        mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
         mDummy = rootView.findViewById(R.id.dummyFocus);
 
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
@@ -212,6 +217,8 @@ public class MainFragment extends Fragment {
 
         ArrayList<String> equationHistory = new ArrayList<>();
         ArrayList<String> assignmentHistory = new ArrayList<>();
+
+        initTabs();
 
         if (savedInstanceState != null) {
             String[] saved = (String[])savedInstanceState.getSerializable("EQUATION_HISTORY");
@@ -365,6 +372,49 @@ public class MainFragment extends Fragment {
         mToggleInputType.setChecked(true);
 
         return rootView;
+    }
+
+    private View createIndicatorView(String label) {
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        View tabIndicator = inflater.inflate(R.layout.tab_indicator, mTabHost.getTabWidget(), false);
+
+        final TextView tv = (TextView) tabIndicator.findViewById(R.id.title);
+        tv.setText(label);
+
+        return tabIndicator;
+    }
+
+    private void initTabs() {
+        mTabHost.setup();
+        FrameLayout contentView = mTabHost.getTabContentView();
+
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        final View subview1 = inflater.inflate(R.layout.bisection_setting_view, contentView, false);
+        final View subview2 = inflater.inflate(R.layout.bingo_setting_view, contentView, false);
+
+        View indicator1 = createIndicatorView("Bisection");
+        View indicator2 = createIndicatorView("Bingo");
+
+        TabHost.TabSpec tab1 = mTabHost.newTabSpec("bisection").setIndicator(indicator1);
+        TabHost.TabSpec tab2 = mTabHost.newTabSpec("bingo").setIndicator(indicator2);
+
+        tab1.setContent(new TabHost.TabContentFactory() {
+            @Override
+            public View createTabContent(String tag) {
+                return subview1;
+            }
+        });
+
+        tab2.setContent(new TabHost.TabContentFactory() {
+            @Override
+            public View createTabContent(String tag) {
+                return subview2;
+            }
+        });
+
+        mTabHost.addTab(tab1);
+        mTabHost.addTab(tab2);
+        mTabHost.setCurrentTab(0);
     }
 
     @Override
