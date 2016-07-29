@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Initial guess"
-            android:id="@+id/labelMinX"
+            android:id="@+id/labelThresh1"
             android:layout_gravity="end"
             android:paddingRight="8dp"
             android:paddingTop="8dp"
@@ -36,16 +36,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/textLowerBound"
+            android:id="@+id/threshold1"
             android:background="@drawable/border_ui"
             android:gravity="center_vertical"
             android:padding="4dp"
             android:typeface="monospace"
-            android:layout_toRightOf="@+id/labelMinX"
+            android:layout_toEndOf="@+id/labelThresh1"
+            android:layout_toRightOf="@+id/labelThresh1"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_alignBottom="@+id/labelMinX"
-            android:layout_alignTop="@+id/labelMinX"/>
+            android:layout_alignBottom="@+id/labelThresh1"
+            android:layout_alignTop="@+id/labelThresh1"/>
 
 
     </RelativeLayout>

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
@@ -207,7 +208,7 @@ public class MainFragment extends Fragment {
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
-        mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
+            mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
         mDummy = rootView.findViewById(R.id.dummyFocus);
@@ -382,6 +383,27 @@ public class MainFragment extends Fragment {
         tv.setText(label);
 
         return tabIndicator;
+    }
+
+    private void setupTabContents(View tab) {
+        FloatingActionButton fab = (FloatingActionButton) tab.findViewById(R.id.fab);
+        TextView threshold1 = (TextView) tab.findViewById(R.id.threshold1);
+        TextView threshold2 = (TextView) tab.findViewById(R.id.threshold2);
+
+        threshold1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
     }
 
     private void initTabs() {

@@ -13,16 +13,14 @@
         android:layout_toStartOf="@+id/fab"
         android:layout_toLeftOf="@+id/fab"
         android:id="@+id/relativeLayout2"
-        android:layout_centerVertical="true"
-        >
-
+        android:layout_centerVertical="true">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Lower bound"
-            android:id="@+id/labelMinX"
+            android:id="@+id/labelThresh1"
             android:layout_gravity="end"
             android:paddingRight="8dp"
             android:paddingTop="8dp"
@@ -37,51 +35,48 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/textLowerBound"
+            android:id="@+id/threshold1"
             android:background="@drawable/border_ui"
             android:gravity="center_vertical"
             android:padding="4dp"
             android:typeface="monospace"
-            android:layout_toRightOf="@+id/labelMinX"
+            android:layout_toRightOf="@+id/labelThresh1"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_alignBottom="@+id/labelMinX"
-            android:layout_alignTop="@+id/labelMinX"/>
+            android:layout_alignBottom="@+id/labelThresh1"
+            android:layout_alignTop="@+id/labelThresh1"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Upper bound"
-            android:id="@+id/labelMinY"
+            android:id="@+id/labelThresh2"
             android:layout_gravity="end"
             android:paddingRight="8dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
-            android:layout_below="@+id/labelMinX"
+            android:layout_below="@+id/labelThresh1"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_toLeftOf="@+id/textLowerBound"
-            android:layout_toStartOf="@+id/textLowerBound"/>
+            android:layout_toLeftOf="@+id/threshold1"
+            android:layout_toStartOf="@+id/threshold1"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/textUpperBound"
+            android:id="@+id/threshold2"
             android:background="@drawable/border_ui"
             android:gravity="center_vertical"
             android:padding="4dp"
             android:typeface="monospace"
-            android:layout_toRightOf="@+id/labelMinY"
-            android:layout_toEndOf="@+id/labelMinY"
-            android:layout_toLeftOf="@+id/buttonGroup"
-            android:layout_toStartOf="@+id/buttonGroup"
+            android:layout_toRightOf="@+id/labelThresh2"
+            android:layout_toEndOf="@+id/labelThresh2"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/labelMinY"
-            android:layout_alignBottom="@+id/labelMinY"/>
-
+            android:layout_alignTop="@+id/labelThresh2"
+            android:layout_alignBottom="@+id/labelThresh2"/>
 
     </RelativeLayout>
 
