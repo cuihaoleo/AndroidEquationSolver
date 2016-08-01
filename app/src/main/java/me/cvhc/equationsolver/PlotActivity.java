@@ -93,10 +93,26 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             maxX = range[1];
         }
 
+        DecimalInputView.OnValueChangedListener valueChangedListener = new DecimalInputView.OnValueChangedListener() {
+            @Override
+            public void onValueChanged(Number val) {
+                double[] tmp = { textLowerBound.getValue(), textUpperBound.getValue() };
+                java.util.Arrays.sort(tmp);
+
+                minX = checkXLogScale.isChecked() ? logScale(tmp[0]) : tmp[0];
+                maxX = checkXLogScale.isChecked() ? logScale(tmp[1]) : tmp[1];
+
+                resetY();
+                updatePlotBound();
+            }
+        };
+
         textLowerBound.setDialogTitle(getString(R.string.lower_bound_of_roi));
         textLowerBound.setDefaultValue(minX);
+        textLowerBound.setOnValueChangedListener(valueChangedListener);
         textUpperBound.setDialogTitle(getString(R.string.upper_bound_of_roi));
         textUpperBound.setDefaultValue(maxX);
+        textUpperBound.setOnValueChangedListener(valueChangedListener);
 
         // listeners
         buttonApply.setOnClickListener(new View.OnClickListener() {
@@ -323,8 +339,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double realMinX = getRealMinX();
         double realMaxX = getRealMaxX();
 
-        textLowerBound.setText(String.format(getString(R.string.format_bound), realMinX));
-        textUpperBound.setText(String.format(getString(R.string.format_bound), realMaxX));
+        textLowerBound.setValue(realMinX);
+        textUpperBound.setValue(realMaxX);
 
         mainSeries.setBound(minX, maxX);
         plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);

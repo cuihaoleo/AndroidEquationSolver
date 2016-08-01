@@ -14,6 +14,7 @@ public class DecimalInputView extends TextView {
     Double mValue;
     String mEditDialogTitle = "Setting";
     Double mDefaultValue;
+    OnValueChangedListener mListener;
 
     final OnClickListener mOnClickListener = new OnClickListener() {
         @Override
@@ -27,7 +28,13 @@ public class DecimalInputView extends TextView {
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            label.setValue(settingView.getInputValue());
+                            Number num = settingView.getInputValue();
+                            if (mValue == null || num.doubleValue() != mValue) {
+                                label.setValue(num);
+                                if (mListener != null) {
+                                    mListener.onValueChanged(num);
+                                }
+                            }
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null);
@@ -68,7 +75,7 @@ public class DecimalInputView extends TextView {
 
     public void setValue(Number value) {
         mValue = value.doubleValue();
-        setText(mValue.toString());
+        setText(String.format(getContext().getString(R.string.format_bound), mValue));
     }
 
     public void setDefaultValue(Number number) {
@@ -82,5 +89,13 @@ public class DecimalInputView extends TextView {
 
     public void setDialogTitle(String str) {
         mEditDialogTitle = str;
+    }
+
+    public void setOnValueChangedListener(OnValueChangedListener listener) {
+        mListener = listener;
+    }
+
+    public interface OnValueChangedListener {
+        void onValueChanged(Number val);
     }
 }
