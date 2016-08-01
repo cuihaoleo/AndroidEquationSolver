@@ -4,12 +4,16 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,6 +23,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -58,15 +63,19 @@ public class MainFragment extends Fragment {
     private ArrayAdapter<String> mAutocompleteEquationAdapter;
 
     private ToggleButton mToggleInputType;
-    private Button mButtonSolve;
     private Button mButtonAdd;
     private ExpressionKeypad mExpressionKeypad;
     private View mDummy;
-
     private TabHost mTabHost;
-
     private Toast mToast;
     private boolean mDoubleBackToExitPressedOnce = false;
+    private View mBisectionSubview;
+    private View mBingoSubview;
+    private ArrayList<FloatingActionButton> mFabs = new ArrayList<>();
+
+    private SharedPreferences mSharedPreferences;
+
+    private double mDefaultMinX, mDefaultMaxX, mDefaultBingo;
 
     public MainFragment() {
     }
@@ -208,13 +217,17 @@ public class MainFragment extends Fragment {
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
-            mButtonSolve = (Button) rootView.findViewById(R.id.buttonSolve);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
         mDummy = rootView.findViewById(R.id.dummyFocus);
 
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
         mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 40);
+
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mDefaultMinX = mSharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
+        mDefaultMaxX = mSharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+        mDefaultBingo = mSharedPreferences.getFloat("pref_default_bingo", 1.0F);
 
         ArrayList<String> equationHistory = new ArrayList<>();
         ArrayList<String> assignmentHistory = new ArrayList<>();
@@ -272,16 +285,6 @@ public class MainFragment extends Fragment {
         mLayoutManager = new LinearLayoutManager(this.getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mButtonSolve.setVisibility(View.GONE);
-        mButtonSolve.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), PlotActivity.class)
-                        .putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
-                startActivityForResult(intent, 0);
-            }
-        });
-
         mButtonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -293,10 +296,11 @@ public class MainFragment extends Fragment {
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
             @Override
             public void onItemChange() {
+                FloatingActionButton fab = (FloatingActionButton)mTabHost.getCurrentView().findViewById(R.id.fab);
                 if (mRecyclerViewAdapter.isReady()) {
-                    mButtonSolve.setVisibility(View.VISIBLE);
+                    enableFabs();
                 } else {
-                    mButtonSolve.setVisibility(View.GONE);
+                    disableFabs();
                 }
             }
         });
@@ -378,32 +382,46 @@ public class MainFragment extends Fragment {
     private View createIndicatorView(String label) {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         View tabIndicator = inflater.inflate(R.layout.tab_indicator, mTabHost.getTabWidget(), false);
-
         final TextView tv = (TextView) tabIndicator.findViewById(R.id.title);
         tv.setText(label);
-
         return tabIndicator;
     }
 
     private void setupTabContents(View tab) {
         FloatingActionButton fab = (FloatingActionButton) tab.findViewById(R.id.fab);
-        TextView threshold1 = (TextView) tab.findViewById(R.id.threshold1);
-        TextView threshold2 = (TextView) tab.findViewById(R.id.threshold2);
+        final DecimalInputView thresh1 = (DecimalInputView) tab.findViewById(R.id.threshold1);
+        final DecimalInputView thresh2 = (DecimalInputView) tab.findViewById(R.id.threshold2);
 
-        threshold1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        mFabs.add(fab);
+        if (tab == mBisectionSubview) {
+            thresh1.setDefaultValue(mDefaultMinX);
+            thresh2.setDefaultValue(mDefaultMaxX);
 
-            }
-        });
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), PlotActivity.class);
+                    intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
+                    intent.putExtra("MODE", "BISECTION");
+                    intent.putExtra("THRESH1", thresh1.getValue());
+                    intent.putExtra("THRESH2", thresh2.getValue());
+                    startActivityForResult(intent, 0);
+                }
+            });
+        } else if (tab == mBingoSubview) {
+            thresh1.setDefaultValue(mDefaultBingo);
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), PlotActivity.class);
+                    intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
+                    intent.putExtra("MODE", "BINGO");
+                    intent.putExtra("THRESH1", thresh1.getValue());
+                    startActivityForResult(intent, 0);
+                }
+            });
+        }
     }
 
     private void initTabs() {
@@ -411,8 +429,10 @@ public class MainFragment extends Fragment {
         FrameLayout contentView = mTabHost.getTabContentView();
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        final View subview1 = inflater.inflate(R.layout.bisection_setting_view, contentView, false);
-        final View subview2 = inflater.inflate(R.layout.bingo_setting_view, contentView, false);
+        mBisectionSubview = inflater.inflate(R.layout.bisection_setting_view, contentView, false);
+        setupTabContents(mBisectionSubview);
+        mBingoSubview = inflater.inflate(R.layout.bingo_setting_view, contentView, false);
+        setupTabContents(mBingoSubview);
 
         View indicator1 = createIndicatorView("Bisection");
         View indicator2 = createIndicatorView("Bingo");
@@ -423,20 +443,35 @@ public class MainFragment extends Fragment {
         tab1.setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
-                return subview1;
+                return mBisectionSubview;
             }
         });
 
         tab2.setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
-                return subview2;
+                return mBingoSubview;
             }
         });
 
         mTabHost.addTab(tab1);
         mTabHost.addTab(tab2);
         mTabHost.setCurrentTab(0);
+        disableFabs();
+    }
+
+    private void disableFabs() {
+        for (FloatingActionButton fab: mFabs) {
+            fab.setEnabled(false);
+            fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorSilver)));
+        }
+    }
+
+    private void enableFabs() {
+        for (FloatingActionButton fab: mFabs) {
+            fab.setEnabled(true);
+            fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorAccent)));
+        }
     }
 
     @Override

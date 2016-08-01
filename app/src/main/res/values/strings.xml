@@ -9,6 +9,7 @@
     <string name="pref_summary_plot_sampling_points" formatted="false">Take %d samples in a plot.</string>
     <string name="pref_title_default_lower_bound">Default lower bound</string>
     <string name="pref_title_default_upper_bound">Default upper bound</string>
+    <string name="pref_title_default_bingo">Default start point of Bingo mode</string>
     <string name="pref_category_plotting">Plot settings</string>
     <string name="title_activity_settings">Settings</string>
     <string name="pref_category_misc">Miscellaneous</string>
