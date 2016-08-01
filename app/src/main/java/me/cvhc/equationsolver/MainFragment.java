@@ -402,9 +402,7 @@ public class MainFragment extends Fragment {
                 public void onClick(View v) {
                     Intent intent = new Intent(getActivity(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
-                    intent.putExtra("MODE", "BISECTION");
-                    intent.putExtra("THRESH1", thresh1.getValue());
-                    intent.putExtra("THRESH2", thresh2.getValue());
+                    intent.putExtra("THRESHOLD", new double[]{ thresh1.getValue(), thresh2.getValue() });
                     startActivityForResult(intent, 0);
                 }
             });
@@ -416,8 +414,7 @@ public class MainFragment extends Fragment {
                 public void onClick(View v) {
                     Intent intent = new Intent(getActivity(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
-                    intent.putExtra("MODE", "BINGO");
-                    intent.putExtra("THRESH1", thresh1.getValue());
+                    intent.putExtra("THRESHOLD", new double[]{ thresh1.getValue() });
                     startActivityForResult(intent, 0);
                 }
             });

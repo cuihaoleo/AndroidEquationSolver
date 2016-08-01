@@ -34,7 +34,7 @@ import java.util.HashMap;
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
-    private TextView textUpperBound, textLowerBound;
+    private DecimalInputView textUpperBound, textLowerBound;
     private XYPlot plot;
     private CheckBox checkXLogScale;
     private HashMap<Character, String> anotherSide;
@@ -47,93 +47,19 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private static double SCALE_YAXIS = 1.12;
 
-    private class BoundSettingListener implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            final TextView label = (TextView)v;
-            final DecimalSettingView settingView = new DecimalSettingView(PlotActivity.this);
-            final String who;
-
-            double realMinX = getRealMinX();
-            double readMaxX = getRealMaxX();
-            final double thisValue, anotherValue;
-
-            if (v == textLowerBound) {
-                thisValue = realMinX;
-                anotherValue = readMaxX;
-                who = "Lower";
-            } else if (v == textUpperBound) {
-                thisValue = readMaxX;
-                anotherValue = realMinX;
-                who = "Upper";
-            } else {
-                throw new RuntimeException();
-            }
-
-            AlertDialog.Builder alert = new AlertDialog.Builder(PlotActivity.this)
-                    .setTitle(String.format("Setting %s Bound", who))
-                    .setView(settingView)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Double n = settingView.getInputValue().doubleValue();
-                            label.setText(n.toString());
-
-                            if (who.equals("Lower")) {
-                                minX = checkXLogScale.isChecked() ? logScale(n) : n;
-                            } else {
-                                maxX = checkXLogScale.isChecked() ? logScale(n) : n;
-                            }
-
-                            resetY();
-                            updatePlotBound();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null);
-
-            final AlertDialog dialog = alert.create();
-            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
-            settingView.setDefaultValue(thisValue);
-            settingView.setOnInputValueChangedListener(new DecimalSettingView.OnInputValueChangedListener() {
-                @Override
-                public void onInputValueChanged(Number val) {
-                    Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-
-                    if (who.equals("Lower")) {
-                        if (val.doubleValue() < anotherValue) {
-                            positiveButton.setEnabled(true);
-                            settingView.setWarning(null);
-                        } else {
-                            positiveButton.setEnabled(false);
-                            settingView.setWarning("Invalid Bound");
-                        }
-                    } else if (who.equals("Upper")) {
-                        if (val.doubleValue() > anotherValue) {
-                            positiveButton.setEnabled(true);
-                            settingView.setWarning(null);
-                        } else {
-                            positiveButton.setEnabled(false);
-                            settingView.setWarning("Invalid Bound");
-                        }
-                    }
-
-                }
-            });
-
-            dialog.show();
-        }
-    }
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
 
+        // load preferences
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        int prefPlot = sharedPreferences.getInt("pref_plot_samples", 200);
+
         // initialize View objects
         Button buttonApply = (Button)findViewById(R.id.buttonApply);
         Button buttonReset = (Button)findViewById(R.id.buttonReset);
-        textLowerBound = (TextView)findViewById(R.id.textLowerBound);
-        textUpperBound = (TextView)findViewById(R.id.textUpperBound);
+        textLowerBound = (DecimalInputView)findViewById(R.id.textLowerBound);
+        textUpperBound = (DecimalInputView)findViewById(R.id.textUpperBound);
         checkXLogScale = (CheckBox)findViewById(R.id.checkXLogScale);
         plot = (XYPlot)findViewById(R.id.plot);
 
@@ -144,9 +70,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         assert checkXLogScale != null;
         assert plot != null;
 
-        textLowerBound.setOnClickListener(new BoundSettingListener());
-        textUpperBound.setOnClickListener(new BoundSettingListener());
-
         // read data from Intent object
         Intent intent = getIntent();
         final ExpressionCalculator eval = new ExpressionCalculator();
@@ -155,11 +78,25 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             eval.setVariable(c, anotherSide.get(c));
         }
 
-        // load preferences
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int prefPlot = sharedPreferences.getInt("pref_plot_samples", 200);
-        minX = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
-        maxX = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
+        double[] threshold = intent.getDoubleArrayExtra("THRESHOLD");
+        if (threshold.length == 2) {
+            // Bisection mode
+            java.util.Arrays.sort(threshold);
+            minX = threshold[0];
+            maxX = threshold[1];
+        } else {
+            // Todo: Bingo mode
+            // find an appropriate range
+            double[] range = findBingoRange(threshold[0], eval);
+            java.util.Arrays.sort(range);
+            minX = range[0];
+            maxX = range[1];
+        }
+
+        textLowerBound.setDialogTitle(getString(R.string.lower_bound_of_roi));
+        textLowerBound.setDefaultValue(minX);
+        textUpperBound.setDialogTitle(getString(R.string.upper_bound_of_roi));
+        textUpperBound.setDefaultValue(maxX);
 
         // listeners
         buttonApply.setOnClickListener(new View.OnClickListener() {
@@ -303,6 +240,51 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         resetY();
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         updatePlotBound();
+    }
+
+    private double[] findBingoRange(double fromX, final ExpressionCalculator eval) {
+        FunctionWrapper.MathFunction func = new FunctionWrapper.MathFunction() {
+            @Override
+            public double call(double x) {
+                eval.setVariable('x', x);
+                ExpressionCalculator.OptionUnion op = eval.evaluate(' ');
+                return op.getValue();
+            }
+        };
+
+        double x1 = fromX, y1 = func.call(fromX);
+        double[] result = new double[]{0, fromX};
+        long round = 0;
+
+        while (isNormal(x1) && round < 100) {
+            double x2 = x1, y2 = Double.NaN;
+            double inc = Math.ulp(x1);
+            round ++;
+
+            while (isNormal(x2)) {
+                x2 += inc;
+                inc *= 10.0;
+
+                if (y1 != (y2 = func.call(x2))) {
+                    break;
+                }
+            }
+
+            double x_inter = (x2*y1 - x1*y2) / (y1-y2);
+            double y_inter = func.call(x_inter);
+            if (!isNormal(x_inter)) {
+                break;
+            } else if (Math.signum(y1) * Math.signum(y_inter) == -1) {
+                result[0] = x1;
+                result[1] = x_inter;
+                break;
+            }
+
+            x1 = x_inter;
+            y1 = y_inter;
+        }
+
+        return result;
     }
 
     private void submitSelectRange() {

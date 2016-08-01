@@ -79,4 +79,8 @@ public class DecimalInputView extends TextView {
     public double getValue() {
         return mValue == null ? mDefaultValue : mValue;
     }
+
+    public void setDialogTitle(String str) {
+        mEditDialogTitle = str;
+    }
 }
