@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 
@@ -35,12 +35,21 @@ public class DecimalInputView extends TextView {
                                     mListener.onValueChanged(num);
                                 }
                             }
+
+                            InputMethodManager inputManager = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputManager.hideSoftInputFromWindow(settingView.getWindowToken(), 0);
                         }
                     })
-                    .setNegativeButton(android.R.string.cancel, null);
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            InputMethodManager inputManager = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                            inputManager.hideSoftInputFromWindow(settingView.getWindowToken(), 0);
+                        }
+                    });
 
             final AlertDialog dialog = alert.create();
-            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            //dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
             if (mValue != null) {
                 settingView.setDefaultValue(mValue);
