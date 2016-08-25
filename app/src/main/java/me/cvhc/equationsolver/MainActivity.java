@@ -25,7 +25,7 @@ public class MainActivity extends IMEDetectActivity {
         assert actionBar != null;
         actionBar.setDisplayShowTitleEnabled(true);
 
-        mCurrentFragment = MainFragment.newInstance(0);
+        mCurrentFragment = MainFragment.newInstance();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, mCurrentFragment)
                 .commit();
