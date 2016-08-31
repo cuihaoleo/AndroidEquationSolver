@@ -514,7 +514,7 @@ public class MainFragment extends Fragment {
 
     private boolean syncIMEState() {
         InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm.isAcceptingText()) {  // OS IME is open, close it
+        if (mActivity.isSoftKeyboardVisible() && imm.isAcceptingText()) {  // OS IME is open, close it
             imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
         } else if (mExpressionKeypad.getVisibility() == View.GONE) {
             if (!mActionBar.isShowing()) {
