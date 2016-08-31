@@ -208,6 +208,7 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
 
             TextView textResult = (TextView) view.findViewById(R.id.textResult);
             textResult.setText(Html.fromHtml("<b>x = </b>" + renderNumber(result, true)));
+            textResult.setTag(renderNumber(result, false));
 
             TextView textWarning = (TextView) view.findViewById(R.id.textWarning);
             textWarning.setText("y(x) = " + renderNumber(func.call(result), false));
@@ -227,7 +228,7 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
 
     private String renderNumber(double n, boolean useHtml) {
         String str1 = (new DecimalFormat("0.0#########")).format(n);
-        String str2 = (new DecimalFormat("0.0#######E0")).format(n);
+        String str2 = (new DecimalFormat("0.0#####E0")).format(n);
         String displayStr = str1.length() < str2.length() ? str1 : str2;
         ExpressionRenderer expr;
 

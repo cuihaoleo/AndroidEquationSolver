@@ -7,6 +7,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.hamcrest.Matcher;
@@ -311,12 +312,10 @@ public class SolveTest {
     private void runCheck(double actual) {
         onView(allOf(withId(R.id.fab), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
                 .perform(click());
-        onView(withId(R.id.checkXLogScale))
-                .perform(click());
         onView(withId(R.id.buttonApply))
                 .perform(click());
 
-        double d = getDouble(withClassName(endsWith("DecimalSettingView")));
+        double d = getDouble(withId(R.id.textResult));
         assertDoubleEquals(d, actual, 0.02);
     }
 
@@ -385,18 +384,20 @@ public class SolveTest {
         onView(matcher).perform(new ViewAction() {
             @Override
             public Matcher<View> getConstraints() {
-                return isAssignableFrom(DecimalSettingView.class);
+                return isAssignableFrom(TextView.class);
             }
 
             @Override
             public String getDescription() {
-                return "Read number from DecimalSettingView";
+                return "Read number from TextView";
             }
 
             @Override
             public void perform(UiController uiController, View view) {
-                DecimalSettingView dsView = (DecimalSettingView) view;
-                holder[0] = dsView.getInputValue();
+                TextView textView = (TextView)view;
+                String str = textView.getText().toString();
+
+                holder[0] = Double.parseDouble((String)textView.getTag());
             }
         });
 
