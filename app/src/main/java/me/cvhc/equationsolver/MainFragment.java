@@ -139,6 +139,7 @@ public class MainFragment extends Fragment {
                     makeToast(R.string.error_invalid_number_format);
                     return "";
                 }
+                prev = c;
             }
             return null;
         }
