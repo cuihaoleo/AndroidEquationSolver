@@ -87,7 +87,7 @@ public class FunctionWrapper implements XYSeries {
             if (!(Double.isNaN(cur_y) || Double.isInfinite(cur_y))) {
                 if (i > 0) {
                     double pre_y = series[i - 1].second;
-                    if (cur_y == 0 || (cur_y * pre_y < 0.0 && Math.abs(cur_y) < 1.0)) {
+                    if (cur_y == 0 || cur_y * pre_y < 0.0) {
                         nZero++;
                     }
                 }
