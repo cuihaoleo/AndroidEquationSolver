@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="MinX ="
+            android:text="MinX"
             android:id="@+id/labelMinX"
             android:textStyle="bold"
             android:layout_gravity="end"
@@ -54,7 +54,8 @@
             android:layout_alignParentStart="true"
             android:layout_toLeftOf="@+id/textUpperBound"
             android:layout_toStartOf="@+id/textUpperBound"
-            android:gravity="end" />
+            android:gravity="end"
+            android:typeface="monospace"/>
 
         <me.cvhc.equationsolver.DecimalInputView
             android:layout_width="match_parent"
@@ -74,8 +75,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="MaxX ="
-            android:id="@+id/labelMinY"
+            android:text="MaxX"
+            android:id="@+id/labelMaxX"
             android:textStyle="bold"
             android:layout_gravity="end"
             android:paddingRight="8dp"
@@ -84,7 +85,8 @@
             android:layout_below="@+id/labelMinX"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:gravity="end" />
+            android:gravity="end"
+            android:typeface="monospace"/>
 
         <me.cvhc.equationsolver.DecimalInputView
             android:layout_width="wrap_content"
@@ -96,8 +98,8 @@
             android:padding="4dp"
             android:typeface="monospace"
             android:layout_below="@+id/textLowerBound"
-            android:layout_toRightOf="@+id/labelMinY"
-            android:layout_toEndOf="@+id/labelMinY"
+            android:layout_toRightOf="@+id/labelMaxX"
+            android:layout_toEndOf="@+id/labelMaxX"
             android:layout_toLeftOf="@+id/buttonGroup"
             android:layout_toStartOf="@+id/buttonGroup"/>
 
@@ -110,7 +112,7 @@
             android:textSize="12sp"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_below="@+id/labelMinY"
+            android:layout_below="@+id/labelMaxX"
             android:layout_alignParentBottom="true"
             android:layout_alignRight="@+id/textUpperBound"
             android:layout_alignEnd="@+id/textUpperBound" />
