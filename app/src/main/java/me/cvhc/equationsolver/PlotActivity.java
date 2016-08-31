@@ -93,6 +93,11 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             maxX = range[1];
         }
 
+        // auto enable Log scale
+        if (minX > 0 && maxX > 0 && Math.log10(maxX / minX) > 6) {
+            checkXLogScale.setChecked(true);
+        }
+
         DecimalInputView.OnValueChangedListener valueChangedListener = new DecimalInputView.OnValueChangedListener() {
             @Override
             public void onValueChanged(Number val) {
