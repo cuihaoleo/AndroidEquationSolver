@@ -229,9 +229,16 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
     private String renderNumber(double n, boolean useHtml) {
         String str1 = (new DecimalFormat("0.0#########")).format(n);
         String str2 = (new DecimalFormat("0.0#####E0")).format(n);
-        String displayStr = str1.length() < str2.length() ? str1 : str2;
-        ExpressionRenderer expr;
+        String displayStr;
 
+        double order = Math.log10(Math.abs(n));
+        if (order < -4 || order > 6) {
+            displayStr = str2;
+        } else {
+            displayStr = str1.length() < str2.length() ? str1 : str2;
+        }
+
+        ExpressionRenderer expr;
         try {
             expr = new ExpressionRenderer(displayStr);
         } catch (Exception e) {
