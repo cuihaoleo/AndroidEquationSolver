@@ -5,6 +5,12 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.text.Html;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
+
+import java.text.DecimalFormat;
 
 /**
  * SolveTask performs bisection method to solve equation F(x)=0 in background.
@@ -197,12 +203,16 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
                     .setPositiveButton(android.R.string.yes, null)
                     .setIconAttribute(android.R.attr.dialogIcon);
 
-            DecimalSettingView displayView = new DecimalSettingView(alert.getContext());
-            displayView.setInputValue(result);
-            displayView.setEditable(false);
-            displayView.setWarning(String.format("Error = " + parentActivity.getString(R.string.format_bound), error));
+            LayoutInflater inflater = parentActivity.getLayoutInflater();
+            View view = inflater.inflate(R.layout.result_display, null);
 
-            alert.setView(displayView);
+            TextView textResult = (TextView) view.findViewById(R.id.textResult);
+            textResult.setText(Html.fromHtml("<b>x = </b>" + renderNumber(result, true)));
+
+            TextView textWarning = (TextView) view.findViewById(R.id.textWarning);
+            textWarning.setText("y(x) = " + renderNumber(func.call(result), false));
+
+            alert.setView(view);
             alert.show();
         }
     }
@@ -213,5 +223,20 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
 
     public void setOnResultListener(OnResultListener listener) {
         mOnResultListener = listener;
+    }
+
+    private String renderNumber(double n, boolean useHtml) {
+        String str1 = (new DecimalFormat("0.0#########")).format(n);
+        String str2 = (new DecimalFormat("0.0#######E0")).format(n);
+        String displayStr = str1.length() < str2.length() ? str1 : str2;
+        ExpressionRenderer expr;
+
+        try {
+            expr = new ExpressionRenderer(displayStr);
+        } catch (Exception e) {
+            return displayStr;
+        }
+
+        return useHtml ? expr.toHTML() : displayStr;
     }
 }
