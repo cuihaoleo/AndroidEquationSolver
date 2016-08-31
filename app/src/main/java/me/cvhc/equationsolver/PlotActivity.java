@@ -42,6 +42,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
 
     private FunctionWrapper mainSeries = null;
     private double minX, maxX;
+    private double defaultMinX, defaultMaxX;
     private double maxAbsY;
     private int nZero = 0;
 
@@ -82,15 +83,14 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         if (threshold.length == 2) {
             // Bisection mode
             java.util.Arrays.sort(threshold);
-            minX = threshold[0];
-            maxX = threshold[1];
+            defaultMinX = minX = threshold[0];
+            defaultMaxX = maxX = threshold[1];
         } else {
-            // Todo: Bingo mode
             // find an appropriate range
             double[] range = findBingoRange(threshold[0], eval);
             java.util.Arrays.sort(range);
-            minX = range[0];
-            maxX = range[1];
+            defaultMinX = minX = range[0];
+            defaultMaxX = maxX = range[1];
         }
 
         // auto enable Log scale
@@ -153,11 +153,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         buttonReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float min = sharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
-                float max = sharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
-
-                minX = checkXLogScale.isChecked() ? logScale(min) : min;
-                maxX = checkXLogScale.isChecked() ? logScale(max) : min;
+                minX = checkXLogScale.isChecked() ? logScale(defaultMinX) : defaultMinX;
+                maxX = checkXLogScale.isChecked() ? logScale(defaultMaxX) : defaultMaxX;
 
                 if (minX >= maxX || !isNormal(minX) || !isNormal(maxX)) {
                     minX = checkXLogScale.isChecked() ? logScale(1e-14) : 0.0;
