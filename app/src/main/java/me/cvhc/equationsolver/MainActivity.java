@@ -1,6 +1,7 @@
 package me.cvhc.equationsolver;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -59,6 +60,9 @@ public class MainActivity extends IMEDetectActivity {
             case R.id.action_help:
                 startActivity(new Intent(this, HelpActivity.class));
                 return true;
+            case R.id.action_about:
+                showAbout();
+                return true;
             case R.id.action_exit:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.action_exit)
@@ -75,5 +79,21 @@ public class MainActivity extends IMEDetectActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void showAbout() {
+        final String APP_WEBSITE = "i-yu.me";
+        final String APP_INTRO = "An Android app for equation solving.";
+
+        AlertDialog.Builder aboutDialog = new AlertDialog.Builder(this);
+        aboutDialog.setTitle(getApplicationName(this));
+        aboutDialog.setIcon(R.mipmap.ic_launcher);
+        aboutDialog.setMessage(APP_INTRO);
+        aboutDialog.show();
+    }
+
+    public static String getApplicationName(Context context) {
+        int stringId = context.getApplicationInfo().labelRes;
+        return context.getString(stringId);
     }
 }
