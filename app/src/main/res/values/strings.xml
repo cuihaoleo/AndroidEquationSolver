@@ -40,4 +40,5 @@
     <string name="title_help_activity" formatted="false">Help (%d/%d)</string>
     <string name="error_invalid_number_format">Invalid number format</string>
     <string name="action_about">About</string>
+    <string name="cannot_evaluate_at_the_range">Cannot evaluate the equation at the range. Please check your input.</string>
 </resources>

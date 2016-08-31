@@ -258,7 +258,18 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         resetY();
         plot.addSeries(mainSeries, new LineAndPointFormatter(Color.rgb(50, 0, 0), null, null, null));
         updatePlotBound();
+
+        if (mainSeries.isAllInvalid()) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.cannot_evaluate_at_the_range)
+                    .setPositiveButton(android.R.string.yes, null)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .show();
+        }
     }
+
+
 
     private double[] findBingoRange(double fromX, final ExpressionCalculator eval) {
         FunctionWrapper.MathFunction func = new FunctionWrapper.MathFunction() {
