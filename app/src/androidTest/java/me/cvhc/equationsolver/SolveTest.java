@@ -316,7 +316,7 @@ public class SolveTest {
                 .perform(click());
 
         double d = getDouble(withId(R.id.textResult));
-        assertDoubleEquals(d, actual, 0.02);
+        assertDoubleEquals(actual, d, 0.02);
     }
 
     private static class DecimalInputViewSettingAction implements ViewAction {
