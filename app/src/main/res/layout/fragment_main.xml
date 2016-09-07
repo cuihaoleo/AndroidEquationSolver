@@ -68,7 +68,22 @@
             android:layout_above="@+id/frameTabHost"
             android:textColorHint="#AAA"
             android:layout_toLeftOf="@+id/buttonAdd"
-            android:layout_toStartOf="@+id/buttonAdd" />
+            android:layout_toStartOf="@+id/buttonAdd"
+            android:paddingRight="24dp" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonHistory"
+            android:layout_alignParentRight="false"
+            android:layout_alignParentEnd="false"
+            android:layout_alignTop="@+id/editInputNewExpression"
+            android:src="@android:drawable/arrow_up_float"
+            android:background="@color/colorTransparent"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:layout_alignRight="@+id/editInputNewExpression"
+            android:layout_alignBottom="@+id/editInputNewExpression" />
 
         <Button
             style="@style/Base.Widget.AppCompat.Button.Colored"
@@ -122,6 +137,7 @@
                 </LinearLayout>
             </TabHost>
         </FrameLayout>
+
     </RelativeLayout>
 
     <me.cvhc.equationsolver.ExpressionKeypad

@@ -40,6 +40,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,6 +68,7 @@ public class MainFragment extends Fragment {
 
     private ToggleButton mToggleInputType;
     private Button mButtonAdd;
+    private ImageButton mButtonHistory;
     private ExpressionKeypad mExpressionKeypad;
     private TabHost mTabHost;
     private Toast mToast;
@@ -221,8 +223,9 @@ public class MainFragment extends Fragment {
         mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
+        mButtonHistory = (ImageButton) rootView.findViewById(R.id.buttonHistory);
         mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
-
+;
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
         mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 40);
 
@@ -269,6 +272,23 @@ public class MainFragment extends Fragment {
             }
         });
 
+        mButtonHistory.setOnClickListener(new View.OnClickListener() {
+            private boolean visible = false;
+
+            @Override
+            public void onClick(View view) {
+                if (visible) {
+                    mEditInputNewExpression.dismissDropDown();
+                    visible = false;
+                } else if (mEditInputNewExpression.getAdapter().getCount() > 0) {
+                    mEditInputNewExpression.showDropDown();
+                    visible = true;
+                } else {
+                    makeToast("No history available.");
+                }
+            }
+        });
+
         mRecyclerViewAdapter = new RecyclerViewAdapter();
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
             @Override
@@ -298,21 +318,13 @@ public class MainFragment extends Fragment {
         mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
         mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
         mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from show up
-        mEditInputNewExpression.setOnTouchListener(new View.OnTouchListener() {
+        mEditInputNewExpression.requestFocus();
+        mEditInputNewExpression.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() != MotionEvent.ACTION_UP) {
-                    return false;
-                }
-
-                mEditInputNewExpression.requestFocus();
+            public void onClick(View view) {
                 if (!mActivity.isSoftKeyboardVisible() && mExpressionKeypad.getVisibility() == View.GONE) {
                     showKeypad();
-                } else if (mEditInputNewExpression.getAdapter().getCount() > 0) {
-                    mEditInputNewExpression.showDropDown();
                 }
-
-                return true;
             }
         });
 
