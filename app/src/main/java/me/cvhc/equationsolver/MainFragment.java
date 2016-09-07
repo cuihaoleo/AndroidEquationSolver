@@ -559,11 +559,19 @@ public class MainFragment extends Fragment {
     }
 
     private void makeToast(String msg) {
+        int[] location = new int[2];
+        mTabHost.getLocationOnScreen(location);
+
+        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(msg);
         mToast.show();
     }
 
     private void makeToast(int res) {
+        int[] location = new int[2];
+        mTabHost.getLocationOnScreen(location);
+
+        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(res);
         mToast.show();
     }
