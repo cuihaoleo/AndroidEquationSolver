@@ -88,7 +88,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         } else {
             // find an appropriate range
             double[] range = findBingoRange(threshold[0], eval);
-            java.util.Arrays.sort(range);
             defaultMinX = minX = range[0];
             defaultMaxX = maxX = range[1];
         }
@@ -269,8 +268,6 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         }
     }
 
-
-
     private double[] findBingoRange(double fromX, final ExpressionCalculator eval) {
         FunctionWrapper.MathFunction func = new FunctionWrapper.MathFunction() {
             @Override
@@ -285,10 +282,10 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         double[] result = new double[]{0, fromX};
         long round = 0;
 
-        while (isNormal(x1) && round < 100) {
+        while (isNormal(x1) && round < 20) {
             double x2 = x1, y2 = Double.NaN;
-            double inc = Math.ulp(x1);
-            round ++;
+            double inc = Math.ulp((float)x1);
+            round++;
 
             while (isNormal(x2)) {
                 x2 += inc;
@@ -303,7 +300,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             double y_inter = func.call(x_inter);
             if (!isNormal(x_inter)) {
                 break;
-            } else if (Math.signum(y1) * Math.signum(y_inter) == -1) {
+            } else if (Math.signum(y1) * Math.signum(y_inter) == -1 || y1 == 0.0) {
                 result[0] = x1;
                 result[1] = x_inter;
                 break;
@@ -312,6 +309,10 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             x1 = x_inter;
             y1 = y_inter;
         }
+
+        java.util.Arrays.sort(result);
+        result[0] -= Math.ulp((float)result[0]);
+        result[1] += Math.ulp((float)result[1]);
 
         return result;
     }
@@ -356,7 +357,10 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         textUpperBound.setValue(realMaxX);
 
         mainSeries.setBound(minX, maxX);
-        plot.setDomainBoundaries(minX, maxX, BoundaryMode.FIXED);
+        plot.setDomainBoundaries(
+                minX,
+                Math.max(maxX, minX + Math.ulp((float)minX) * mainSeries.size()),
+                BoundaryMode.FIXED);
 
         nZero = mainSeries.getNZero();
         plot.setRangeBoundaries(-maxAbsY, maxAbsY, BoundaryMode.FIXED);

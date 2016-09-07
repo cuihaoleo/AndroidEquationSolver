@@ -52,7 +52,7 @@ public class FunctionWrapper implements XYSeries {
     public void setBound(Double l, Double u) {
         if (l != null) { lowerBound = l; }
         if (u != null) { upperBound = u; }
-        step = (upperBound - lowerBound) / seriesSize;
+        step = Math.max((upperBound - lowerBound) / seriesSize, Math.ulp(0));
 
         ListIterator<Pair<Double,Double>> iter = seriesCache.listIterator();
         Double x = lowerBound;
