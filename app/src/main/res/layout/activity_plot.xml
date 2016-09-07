@@ -69,7 +69,9 @@
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@+id/labelMinX"
             android:layout_alignRight="@+id/textUpperBound"
-            android:layout_alignEnd="@+id/textUpperBound" />
+            android:layout_alignEnd="@+id/textUpperBound"
+            android:layout_alignTop="@+id/labelMinX"
+            android:layout_alignBottom="@+id/labelMinX" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -101,7 +103,9 @@
             android:layout_toRightOf="@+id/labelMaxX"
             android:layout_toEndOf="@+id/labelMaxX"
             android:layout_toLeftOf="@+id/buttonGroup"
-            android:layout_toStartOf="@+id/buttonGroup"/>
+            android:layout_toStartOf="@+id/buttonGroup"
+            android:layout_alignTop="@+id/labelMaxX"
+            android:layout_alignBottom="@+id/labelMaxX" />
 
         <CheckBox
             android:layout_width="wrap_content"
