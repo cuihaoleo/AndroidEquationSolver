@@ -28,7 +28,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -239,13 +238,14 @@ public class MainFragment extends Fragment {
 
         initTabs();
 
-        if (savedInstanceState != null) {
-            String[] saved = (String[])savedInstanceState.getSerializable("EQUATION_HISTORY");
+        Bundle args = getArguments();
+        if (args != null) {
+            String[] saved = (String[])args.getSerializable("EQUATION_HISTORY");
             if (saved != null) {
                 equationHistory.addAll(Arrays.asList(saved));
             }
 
-            saved = (String[])savedInstanceState.getSerializable("ASSIGNMENT_HISTORY");
+            saved = (String[])args.getSerializable("ASSIGNMENT_HISTORY");
             if (saved != null) {
                 assignmentHistory.addAll(Arrays.asList(saved));
             }
@@ -468,8 +468,7 @@ public class MainFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void saveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
         String[] assignmentHistory = new String[HISTORY_SIZE];

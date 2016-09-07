@@ -27,6 +27,7 @@ public class MainActivity extends IMEDetectActivity {
         actionBar.setDisplayShowTitleEnabled(true);
 
         mCurrentFragment = MainFragment.newInstance();
+        mCurrentFragment.setArguments(savedInstanceState);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, mCurrentFragment)
                 .commit();
@@ -79,6 +80,12 @@ public class MainActivity extends IMEDetectActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mCurrentFragment.saveInstanceState(outState);
     }
 
     private void showAbout() {
