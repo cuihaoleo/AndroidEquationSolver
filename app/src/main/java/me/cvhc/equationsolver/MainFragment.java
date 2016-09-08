@@ -51,6 +51,8 @@ import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListen
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainFragment extends Fragment {
     private final String LOG_TAG = MainFragment.class.getSimpleName();
@@ -237,6 +239,14 @@ public class MainFragment extends Fragment {
         mDefaultMinX = mSharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
         mDefaultMaxX = mSharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
         mDefaultBingo = mSharedPreferences.getFloat("pref_default_bingo", 1.0F);
+
+        mAssignmentHistory.addAll(
+                mSharedPreferences.getStringSet("ASSIGNMENT_HISTORY", new HashSet<String>()));
+        mIndexFavoriteInAssignmentHistory[0] = mAssignmentHistory.size();
+        mEquationHistory.addAll(
+                mSharedPreferences.getStringSet("EQUATION_HISTORY", new HashSet<String>()));
+        mIndexFavoriteInEquationHistory[0] = mEquationHistory.size();
+
 
         initTabs();
 
@@ -592,6 +602,24 @@ public class MainFragment extends Fragment {
                         }
                     }
                 }
+            }
+        });
+
+        mPopupHistory.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                SharedPreferences.Editor editor = mSharedPreferences.edit();
+
+                Set<String> assignmentSet = new HashSet<String>();
+                Set<String> equationSet = new HashSet<String>();
+
+                assignmentSet.addAll(mAssignmentHistory.subList(0, mIndexFavoriteInAssignmentHistory[0]));
+                equationSet.addAll(mEquationHistory.subList(0, mIndexFavoriteInEquationHistory[0]));
+
+                editor.putStringSet("ASSIGNMENT_HISTORY", assignmentSet);
+                editor.putStringSet("EQUATION_HISTORY", equationSet);
+
+                editor.apply();
             }
         });
 
