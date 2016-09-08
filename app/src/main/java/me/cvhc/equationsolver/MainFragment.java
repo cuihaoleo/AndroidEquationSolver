@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,13 +35,13 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,7 +50,7 @@ import android.widget.ToggleButton;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 
 public class MainFragment extends Fragment {
     private final String LOG_TAG = MainFragment.class.getSimpleName();
@@ -60,10 +62,13 @@ public class MainFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private AutoCompleteTextView mEditInputNewExpression;
+    private EditText mEditInputNewExpression;
+    private PopupWindow mPopupHistory;
 
-    private ArrayAdapter<String> mAutocompleteAssignmentAdapter;
-    private ArrayAdapter<String> mAutocompleteEquationAdapter;
+    private ArrayList<String> mAssignmentHistory = new ArrayList<>();
+    private int[] mIndexFavoriteInAssignmentHistory = {0};
+    private ArrayList<String> mEquationHistory = new ArrayList<>();
+    private int[] mIndexFavoriteInEquationHistory = {0};
 
     private ToggleButton mToggleInputType;
     private Button mButtonAdd;
@@ -191,9 +196,9 @@ public class MainFragment extends Fragment {
             mRecyclerView.smoothScrollToPosition(mRecyclerViewAdapter.getItemCount() - 1);
 
             if (mToggleInputType.isChecked()) {
-                mAutocompleteEquationAdapter.insert(v.getText().toString(), 0);
+                mEquationHistory.add(mIndexFavoriteInEquationHistory[0], v.getText().toString());
             } else {
-                mAutocompleteAssignmentAdapter.insert(v.getText().toString(), 0);
+                mAssignmentHistory.add(mIndexFavoriteInAssignmentHistory[0], v.getText().toString());
             }
 
             v.setText("");
@@ -219,7 +224,7 @@ public class MainFragment extends Fragment {
 
         mActionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        mEditInputNewExpression = (AutoCompleteTextView) rootView.findViewById(R.id.editInputNewExpression);
+        mEditInputNewExpression = (EditText) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mButtonHistory = (ImageButton) rootView.findViewById(R.id.buttonHistory);
@@ -233,28 +238,7 @@ public class MainFragment extends Fragment {
         mDefaultMaxX = mSharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
         mDefaultBingo = mSharedPreferences.getFloat("pref_default_bingo", 1.0F);
 
-        ArrayList<String> equationHistory = new ArrayList<>();
-        ArrayList<String> assignmentHistory = new ArrayList<>();
-
         initTabs();
-
-        Bundle args = getArguments();
-        if (args != null) {
-            String[] saved = (String[])args.getSerializable("EQUATION_HISTORY");
-            if (saved != null) {
-                equationHistory.addAll(Arrays.asList(saved));
-            }
-
-            saved = (String[])args.getSerializable("ASSIGNMENT_HISTORY");
-            if (saved != null) {
-                assignmentHistory.addAll(Arrays.asList(saved));
-            }
-        }
-
-        mAutocompleteEquationAdapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_list_item_1, equationHistory);
-        mAutocompleteAssignmentAdapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_list_item_1, assignmentHistory);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -273,19 +257,9 @@ public class MainFragment extends Fragment {
         });
 
         mButtonHistory.setOnClickListener(new View.OnClickListener() {
-            private boolean visible = false;
-
             @Override
             public void onClick(View view) {
-                if (visible) {
-                    mEditInputNewExpression.dismissDropDown();
-                    visible = false;
-                } else if (mEditInputNewExpression.getAdapter().getCount() > 0) {
-                    mEditInputNewExpression.showDropDown();
-                    visible = true;
-                } else {
-                    makeToast("No history available.");
-                }
+                popupHistory();
             }
         });
 
@@ -293,7 +267,6 @@ public class MainFragment extends Fragment {
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
             @Override
             public void onItemChange() {
-                FloatingActionButton fab = (FloatingActionButton)mTabHost.getCurrentView().findViewById(R.id.fab);
                 if (mRecyclerViewAdapter.isReady()) {
                     enableFabs();
                 } else {
@@ -311,7 +284,6 @@ public class MainFragment extends Fragment {
         mExpressionKeypad.setKeyboard(keypad);
         mExpressionKeypad.setPreviewEnabled(false);
 
-        mEditInputNewExpression.setAdapter(mAutocompleteAssignmentAdapter);
         mEditInputNewExpression.setOnEditorActionListener(new FinishEditListener());
         mEditInputNewExpression.addTextChangedListener(new CustomTextWatcher());
         mEditInputNewExpression.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
@@ -348,11 +320,9 @@ public class MainFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     makeToast("Input the equation in the text box");
-                    mEditInputNewExpression.setAdapter(mAutocompleteEquationAdapter);
                     mEditInputNewExpression.setHint(R.string.hint_input_equation);
                 } else {
                     makeToast("Assign an ID in the text box");
-                    mEditInputNewExpression.setAdapter(mAutocompleteAssignmentAdapter);
                     mEditInputNewExpression.setHint(R.string.hint_input_assignment);
                 }
 
@@ -468,24 +438,6 @@ public class MainFragment extends Fragment {
         }
     }
 
-    public void saveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        String[] assignmentHistory = new String[HISTORY_SIZE];
-        String[] equationHistory = new String[HISTORY_SIZE];
-
-        for (int i=0; i<HISTORY_SIZE && i<mAutocompleteAssignmentAdapter.getCount(); i++) {
-            assignmentHistory[i] = mAutocompleteAssignmentAdapter.getItem(i);
-        }
-
-        for (int i=0; i<HISTORY_SIZE && i<mAutocompleteEquationAdapter.getCount(); i++) {
-            equationHistory[i] = mAutocompleteEquationAdapter.getItem(i);
-        }
-
-        outState.putSerializable("ASSIGNMENT_HISTORY", assignmentHistory);
-        outState.putSerializable("EQUATION_HISTORY", equationHistory);
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 0 && resultCode == Activity.RESULT_OK) {
@@ -573,5 +525,77 @@ public class MainFragment extends Fragment {
         mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(res);
         mToast.show();
+    }
+
+    private void popupHistory() {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View view = inflater.inflate(R.layout.popup_window_list, null);
+        ListView listView = (ListView)view.findViewById(R.id.listHistory);
+        final int[] index;
+        final ArrayList<String> history;
+
+        if (mToggleInputType.isChecked()) {
+            history = mEquationHistory;
+            index = mIndexFavoriteInEquationHistory;
+        } else {
+            history = mAssignmentHistory;
+            index = mIndexFavoriteInAssignmentHistory;
+        }
+
+        final HistoryListAdapter adapter = new HistoryListAdapter(history, index[0], getContext());
+        mPopupHistory = new PopupWindow(view,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        mPopupHistory.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        mPopupHistory.setOutsideTouchable(true);
+        mPopupHistory.setAnimationStyle(android.R.style.Animation_Dialog);
+        mPopupHistory.setTouchable(true);
+        mPopupHistory.setFocusable(true);
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPopupHistory.dismiss();
+            }
+        });
+
+        listView.setAdapter(adapter);
+        adapter.setOnItemClickedListener(new HistoryListAdapter.OnItemClickedListener() {
+            // clicked on padding
+            @Override
+            public void onItemClicked(int position) {
+                mEditInputNewExpression.setText("");
+                mEditInputNewExpression.append((String)adapter.getItem(position));
+                mPopupHistory.dismiss();
+            }
+        });
+
+        adapter.setOnItemPinningStateChangedListener(new HistoryListAdapter.OnItemPinningStateChangedListener() {
+            @Override
+            public void onItemPinningStateChanged(int position, boolean pinned) {
+                String item = (String)adapter.getItem(position);
+                int realPosition = history.indexOf(item);
+
+                if (realPosition >= 0) {
+                    if (pinned && realPosition >= index[0]) {
+                        index[0]++;
+                        while (realPosition >= index[0]) {
+                            Collections.swap(history, realPosition, realPosition-1);
+                            realPosition--;
+                        }
+                    } else if (!pinned && realPosition < index[0]) {
+                        index[0]--;
+                        while (realPosition < index[0]) {
+                            Collections.swap(history, realPosition, realPosition+1);
+                            realPosition++;
+                        }
+                    }
+                }
+            }
+        });
+
+        mPopupHistory.update();
+        mPopupHistory.showAsDropDown(mEditInputNewExpression, 0, -10);
     }
 }

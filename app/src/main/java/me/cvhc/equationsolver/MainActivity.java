@@ -82,12 +82,6 @@ public class MainActivity extends IMEDetectActivity {
         }
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mCurrentFragment.saveInstanceState(outState);
-    }
-
     private void showAbout() {
         final String APP_WEBSITE = "i-yu.me";
         final String APP_INTRO = "An Android app for equation solving.";

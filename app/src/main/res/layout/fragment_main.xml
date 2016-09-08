@@ -51,7 +51,7 @@
             android:layout_below="@+id/recyclerView"
             android:layout_above="@+id/frameTabHost"/>
 
-        <AutoCompleteTextView
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/editInputNewExpression"
@@ -78,7 +78,7 @@
             android:layout_alignParentRight="false"
             android:layout_alignParentEnd="false"
             android:layout_alignTop="@+id/editInputNewExpression"
-            android:src="@android:drawable/arrow_up_float"
+            android:src="@android:drawable/arrow_down_float"
             android:background="@color/colorTransparent"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
