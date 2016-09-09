@@ -311,8 +311,8 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         }
 
         java.util.Arrays.sort(result);
-        result[0] -= Math.ulp((float)result[0]);
-        result[1] += Math.ulp((float)result[1]);
+        result[0] -= Math.max(Math.ulp((float)result[0]) * 100, Math.abs(result[0]) * 0.1);
+        result[1] += Math.max(Math.ulp((float)result[1]) * 100, Math.abs(result[1]) * 0.1);
 
         return result;
     }
