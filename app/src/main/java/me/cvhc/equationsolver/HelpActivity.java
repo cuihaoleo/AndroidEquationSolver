@@ -1,5 +1,7 @@
 package me.cvhc.equationsolver;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -7,11 +9,16 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ThemedSpinnerAdapter;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 public class HelpActivity extends AppCompatActivity {
 
@@ -22,30 +29,36 @@ public class HelpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_help);
 
-        setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        assert toolbar != null;
+        setSupportActionBar(toolbar);
 
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
+        actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.container);
-        assert viewPager != null;
-        viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        assert spinner != null;
+        spinner.setAdapter(new SectionsPagerAdapter(
+                toolbar.getContext(),
+                new String[]{
+                        "Basic Usage",
+                        "Expression",
+                }));
 
-        ViewPager.OnPageChangeListener pageChangeListener = new ViewPager.OnPageChangeListener() {
-            @Override public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
-            @Override public void onPageScrollStateChanged(int state) { }
-
-            @Override public void onPageSelected(int position) {
-                HelpActivity.this.setTitle(
-                        String.format(
-                                getString(R.string.title_help_activity),
-                                position + 1, N_PAGES));
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+                        .commit();
             }
-        };
 
-        viewPager.addOnPageChangeListener(pageChangeListener);
-        pageChangeListener.onPageSelected(0);
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
 
     public static class PlaceholderFragment extends Fragment {
@@ -80,19 +93,40 @@ public class HelpActivity extends AppCompatActivity {
         }
     }
 
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
+    private static class SectionsPagerAdapter extends ArrayAdapter<String> implements ThemedSpinnerAdapter {
+        private final ThemedSpinnerAdapter.Helper mDropDownHelper;
+
+        public SectionsPagerAdapter(Context context, String[] objects) {
+            super(context, android.R.layout.simple_list_item_1, objects);
+            mDropDownHelper = new ThemedSpinnerAdapter.Helper(context);
         }
 
         @Override
-        public Fragment getItem(int position) {
-            return PlaceholderFragment.newInstance(position + 1);
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            View view;
+
+            if (convertView == null) {
+                // Inflate the drop down using the helper's LayoutInflater
+                LayoutInflater inflater = mDropDownHelper.getDropDownViewInflater();
+                view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            } else {
+                view = convertView;
+            }
+
+            TextView textView = (TextView) view.findViewById(android.R.id.text1);
+            textView.setText(getItem(position));
+
+            return view;
         }
 
         @Override
-        public int getCount() {
-            return N_PAGES;
+        public Resources.Theme getDropDownViewTheme() {
+            return mDropDownHelper.getDropDownViewTheme();
+        }
+
+        @Override
+        public void setDropDownViewTheme(Resources.Theme theme) {
+            mDropDownHelper.setDropDownViewTheme(theme);
         }
     }
 }
