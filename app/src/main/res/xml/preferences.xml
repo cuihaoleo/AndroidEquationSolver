@@ -14,12 +14,12 @@
             android:singleLine="true"
             android:defaultValue="0.0" />
         <me.cvhc.equationsolver.FloatSettingPreference
-            android:key="pref_default_bingo"
+            android:key="pref_default_upper_bound"
             android:title="@string/pref_title_default_upper_bound"
             android:singleLine="true"
             android:defaultValue="1.0" />
         <me.cvhc.equationsolver.FloatSettingPreference
-            android:key="pref_default_upper_bound"
+            android:key="pref_default_bingo"
             android:title="@string/pref_title_default_bingo"
             android:singleLine="true"
             android:defaultValue="1.0" />
@@ -28,5 +28,7 @@
     <PreferenceCategory android:title="@string/pref_category_misc">
         <Preference android:title="@string/pref_reset_settings"
             android:key="pref_reset_settings" />
+        <Preference android:title="@string/pref_about"
+            android:key="pref_about" />
     </PreferenceCategory>
 </PreferenceScreen>
