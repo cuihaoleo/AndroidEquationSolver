@@ -8,8 +8,8 @@ android {
         applicationId "me.cvhc.equationsolver"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        versionCode 160909
+        versionName "1.0beta1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
