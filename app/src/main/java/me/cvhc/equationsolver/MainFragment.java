@@ -84,9 +84,10 @@ public class MainFragment extends Fragment {
     private View mBisectionSubview;
     private View mBingoSubview;
     private ArrayList<FloatingActionButton> mFabs = new ArrayList<>();
-    private boolean mCompactUi = false;
 
     private SharedPreferences mSharedPreferences;
+    private InputMethodManager mInputMethodManager;
+
 
     private double mDefaultMinX, mDefaultMaxX, mDefaultBingo;
 
@@ -247,6 +248,8 @@ public class MainFragment extends Fragment {
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
         mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 40);
 
+        mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mDefaultMinX = mSharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
         mDefaultMaxX = mSharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
@@ -334,11 +337,10 @@ public class MainFragment extends Fragment {
             public void onChangeMode() {
                 hideKeypad();
                 mEditInputNewExpression.requestFocus();
-                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                imm.showSoftInput(mEditInputNewExpression, InputMethodManager.SHOW_IMPLICIT);
-                Snackbar.make(mEditInputNewExpression,
-                        R.string.reopen_keyboard, Snackbar.LENGTH_SHORT).show();
+
+                mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                mInputMethodManager.showSoftInput(mEditInputNewExpression, InputMethodManager.SHOW_FORCED);
+
             }
         });
         mExpressionKeypad.setOnKeyboardActionListener(listener);
@@ -482,8 +484,14 @@ public class MainFragment extends Fragment {
     }
 
     private void showKeypad() {
+        if (mActivity.isSoftKeyboardVisible()) {
+            View view = mActivity.getCurrentFocus();
+            if (view != null) {
+                mInputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+
         if (!isKeypadOn()) {
-            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
             mExpressionKeypad.setVisibility(View.VISIBLE);
             // enableCompactUI();
         }
@@ -501,12 +509,10 @@ public class MainFragment extends Fragment {
     }
 
     public boolean onBackPressed() {
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-
         if (mExpressionKeypad.getVisibility() == View.VISIBLE) {  // app keypad is open
             hideKeypad();
-        } else if (mActivity.isSoftKeyboardVisible() && imm.isAcceptingText()) {
-            imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
+        } else if (mActivity.isSoftKeyboardVisible() && mInputMethodManager.isAcceptingText()) {
+            mInputMethodManager.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
         } else {
             return !tryExit();
         }
