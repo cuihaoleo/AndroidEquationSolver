@@ -14,11 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.TextView;
 
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
@@ -30,6 +28,7 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.HashMap;
+import java.util.Locale;
 
 
 public class PlotActivity extends AppCompatActivity implements OnTouchListener {
@@ -46,7 +45,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
     private double maxAbsY;
     private int nZero = 0;
 
-    private static double SCALE_YAXIS = 1.12;
+    final private static double SCALE_YAXIS = 1.12;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -202,7 +201,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             @Override
             public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
                 double output = checkXLogScale.isChecked() ? logScaleRecover(value) : value;
-                return new StringBuffer(String.format("%6.4g", output));
+                return new StringBuffer(String.format(Locale.getDefault(), "%6.4g", output));
             }
         });
 
@@ -210,7 +209,7 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
         plot.setRangeValueFormat(new CustomFormat() {
             @Override
             public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
-                return new StringBuffer(String.format("%6.4g", value));
+                return new StringBuffer(String.format(Locale.getDefault(), "%6.4g", value));
             }
         });
 

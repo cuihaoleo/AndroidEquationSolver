@@ -22,13 +22,12 @@ import android.widget.Toast;
 
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
-    private SettingsFragment fragment;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        fragment = new SettingsFragment();
+        SettingsFragment fragment = new SettingsFragment();
         getFragmentManager().beginTransaction().replace(android.R.id.content, fragment).commit();
         setupActionBar();
     }

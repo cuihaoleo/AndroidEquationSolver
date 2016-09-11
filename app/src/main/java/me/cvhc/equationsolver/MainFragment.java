@@ -585,8 +585,8 @@ public class MainFragment extends Fragment {
             public void onDismiss() {
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-                Set<String> assignmentSet = new HashSet<String>();
-                Set<String> equationSet = new HashSet<String>();
+                Set<String> assignmentSet = new HashSet<>();
+                Set<String> equationSet = new HashSet<>();
 
                 assignmentSet.addAll(mAssignmentHistory.subList(0, mIndexFavoriteInAssignmentHistory[0]));
                 equationSet.addAll(mEquationHistory.subList(0, mIndexFavoriteInEquationHistory[0]));

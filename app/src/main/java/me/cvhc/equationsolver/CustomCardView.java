@@ -1,18 +1,13 @@
 package me.cvhc.equationsolver;
 
 import android.content.Context;
-import android.media.Image;
 import android.support.v7.widget.CardView;
 import android.text.Editable;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class CustomCardView extends CardView {
@@ -20,7 +15,6 @@ public class CustomCardView extends CardView {
     private TextView mLabelSubtext;
     private TextView mLabelWarningMessage;
     private CheckBox mCheckActivate;
-    private boolean blocked = false;
     private OnCheckedChangeListener mOnCheckedChangeListener;
 
     public CustomCardView(Context context) {
@@ -101,7 +95,7 @@ public class CustomCardView extends CardView {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return blocked;
+        return false;
     }
 
     public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {

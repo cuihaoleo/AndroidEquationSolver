@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ThemedSpinnerAdapter;
@@ -20,9 +17,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class HelpActivity extends AppCompatActivity {
+import java.util.Locale;
 
-    private static final int N_PAGES = 2;
+public class HelpActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +83,7 @@ public class HelpActivity extends AppCompatActivity {
             Bundle args = getArguments();
 
             sectionNumber = args.getInt(ARG_SECTION_NUMBER);
-            url = String.format("file:///android_asset/help%d.html", sectionNumber);
+            url = String.format(Locale.getDefault(), "file:///android_asset/help%d.html", sectionNumber);
             mWebView.loadUrl(url);
 
             return rootView;

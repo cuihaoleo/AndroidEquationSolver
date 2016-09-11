@@ -16,13 +16,11 @@ public class HistoryListAdapter extends BaseAdapter implements ListAdapter {
     private Context mContext;
     private ArrayList<String> mList = new ArrayList<>();
     private boolean[] mFavoriteMark;
-    private int mIndexFavorite;
     private OnItemClickedListener mOnItemClickedListener;
     private OnItemPinningStateChangedListener mOnItemPinningStateChangedListener;
 
     public HistoryListAdapter(ArrayList<String> list, int idxFavorite, Context context) {
         mList.addAll(list);
-        mIndexFavorite = idxFavorite;
         mContext = context;
 
         mFavoriteMark = new boolean[mList.size()];

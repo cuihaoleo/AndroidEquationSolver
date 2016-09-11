@@ -26,7 +26,6 @@ public class FunctionWrapper implements XYSeries {
     private MathFunction function;
     private int seriesSize;
     private double upperBound = 0, lowerBound = 0;
-    private double step = 0;
     private boolean allInvalid = true;
     private int nZero = 0;
     private double minY, maxY;
@@ -52,7 +51,7 @@ public class FunctionWrapper implements XYSeries {
     public void setBound(Double l, Double u) {
         if (l != null) { lowerBound = l; }
         if (u != null) { upperBound = u; }
-        step = Math.max((upperBound - lowerBound) / seriesSize, Math.ulp(0));
+        double step = Math.max((upperBound - lowerBound) / seriesSize, Math.ulp(0));
 
         ListIterator<Pair<Double,Double>> iter = seriesCache.listIterator();
         Double x = lowerBound;
@@ -63,10 +62,10 @@ public class FunctionWrapper implements XYSeries {
         minY = Double.POSITIVE_INFINITY;
         maxY = Double.NEGATIVE_INFINITY;
 
-        for (int i=0; i<seriesSize; i++, x+=step) {
-            double lower = x - step/2.0;
-            double upper = x + step/2.0;
-            Pair<Double, Double> cur = null;
+        for (int i=0; i<seriesSize; i++, x+= step) {
+            double lower = x - step /2.0;
+            double upper = x + step /2.0;
+            Pair<Double, Double> cur;
 
             while (iter.hasNext()) {
                 cur = iter.next();
@@ -78,7 +77,7 @@ public class FunctionWrapper implements XYSeries {
                 } else {
                     Pair<Double, Double> p = new Pair<>(x, function.call(x));
                     iter.previous();
-                    iter.add(cur = series[i] = p);
+                    iter.add(series[i] = p);
                     break;
                 }
             }
@@ -92,8 +91,8 @@ public class FunctionWrapper implements XYSeries {
                     }
                 }
 
-                if (cur_y > maxY) { maxY = cur_y; };
-                if (cur_y < minY) { minY = cur_y; };
+                if (cur_y > maxY) { maxY = cur_y; }
+                if (cur_y < minY) { minY = cur_y; }
                 if (allInvalid) { allInvalid = false; }
             }
         }
