@@ -166,7 +166,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         items.add(holder);
         savedResults.add(null);
-        return notifyChange();
+        boolean notified = notifyChange();
+
+        if (!notified) {
+            items.remove(holder);
+        }
+        return notified;
     }
 
     public Set<Character> getUnassignedConstants() {
