@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class HistoryListAdapter extends BaseAdapter implements ListAdapter {
     private Context mContext;
     private ArrayList<String> mList = new ArrayList<>();
+    private boolean[] mFavoriteMark;
     private int mIndexFavorite;
     private OnItemClickedListener mOnItemClickedListener;
     private OnItemPinningStateChangedListener mOnItemPinningStateChangedListener;
@@ -23,6 +24,11 @@ public class HistoryListAdapter extends BaseAdapter implements ListAdapter {
         mList.addAll(list);
         mIndexFavorite = idxFavorite;
         mContext = context;
+
+        mFavoriteMark = new boolean[mList.size()];
+        for (int i=0; i<idxFavorite; i++) {
+            mFavoriteMark[i] = true;
+        }
     }
 
     @Override
@@ -53,7 +59,7 @@ public class HistoryListAdapter extends BaseAdapter implements ListAdapter {
         textContent.setText(mList.get(i));
 
         toggleFavorite.setOnCheckedChangeListener(null);
-        toggleFavorite.setChecked(i < mIndexFavorite);
+        toggleFavorite.setChecked(mFavoriteMark[i]);
 
         final int i_copy = i;
         textContent.setOnClickListener(new View.OnClickListener() {
@@ -67,6 +73,7 @@ public class HistoryListAdapter extends BaseAdapter implements ListAdapter {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 mOnItemPinningStateChangedListener.onItemPinningStateChanged(i_copy, b);
+                mFavoriteMark[i_copy] = b;
             }
         });
 

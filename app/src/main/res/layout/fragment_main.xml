@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Workspace"
-            android:id="@+id/textView5"
+            android:id="@+id/textWorkspaceTitle"
             android:layout_marginBottom="4dp"
             android:textStyle="bold" />
 
@@ -30,12 +30,12 @@
             android:layout_alignParentStart="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/textView5"
+            android:layout_below="@+id/textWorkspaceTitle"
             android:descendantFocusability="beforeDescendants"
             android:scrollbars="horizontal"
             android:layout_above="@+id/editInputNewExpression"
             android:background="@drawable/border_ui"
-            android:padding="6dp" />
+            android:padding="2dp" />
 
         <ToggleButton
             android:layout_width="wrap_content"
@@ -112,7 +112,8 @@
             <TabHost
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/tabHost">
+                android:id="@+id/tabHost"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"

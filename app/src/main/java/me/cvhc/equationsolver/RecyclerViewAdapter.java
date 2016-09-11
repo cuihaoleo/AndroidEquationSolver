@@ -9,6 +9,9 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private ArrayList<ExpressionHolder> items = new ArrayList<>();
@@ -126,11 +129,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return items.size();
     }
 
-    public boolean newItem(CharSequence text, boolean checked) {
+    public boolean newItem(CharSequence text, boolean isEquation) {
         char id;
         String expr_str;
 
-        if (checked) {  // equation
+        if (isEquation) {  // equation
             id = ' ';
             expr_str = text.toString();
         } else {
@@ -166,22 +169,28 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return notifyChange();
     }
 
-    public boolean isReady() {
+    public Set<Character> getUnassignedConstants() {
         if (selectedEquation == null) {
-            return false;
+            return null;
         }
 
         globalEvaluator.setVariable(' ', items.get(selectedEquation).expr);
         ExpressionCalculator.OptionUnion op = globalEvaluator.evaluate(' ');
 
         if (op == null) {
-            return false;
+            return null;
         } else if (op.getValue() != null) {
-            return true;
+            return new HashSet<>();
         } else {
-            int size = op.getVariable().size();
-            return size == 0 || (size == 1 && op.getVariable().contains('x'));
+            Set<Character> set = op.getVariable();
+            set.remove('x');
+            return set;
         }
+    }
+
+    public boolean isReady() {
+        Set<Character> v = getUnassignedConstants();
+        return v != null && v.size() == 0;
     }
 
     public boolean notifyChange() {

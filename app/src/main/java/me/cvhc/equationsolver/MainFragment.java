@@ -52,6 +52,7 @@ import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListen
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class MainFragment extends Fragment {
@@ -65,6 +66,7 @@ public class MainFragment extends Fragment {
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private EditText mEditInputNewExpression;
+    private TextView mTextWorkspaceTitle;
     private PopupWindow mPopupHistory;
 
     private ArrayList<String> mAssignmentHistory = new ArrayList<>();
@@ -82,6 +84,7 @@ public class MainFragment extends Fragment {
     private View mBisectionSubview;
     private View mBingoSubview;
     private ArrayList<FloatingActionButton> mFabs = new ArrayList<>();
+    private boolean mCompactUi = false;
 
     private SharedPreferences mSharedPreferences;
 
@@ -91,15 +94,20 @@ public class MainFragment extends Fragment {
     }
 
     private class CustomTextWatcher implements TextWatcher {
-        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
 
         @Override
         public void afterTextChanged(Editable s) {
             String str = s.toString();
 
             mButtonAdd.setVisibility(str.length() > 0 ? View.VISIBLE : View.GONE);
-            if (mToggleInputType.isChecked() || str.length() == 0) {
+            if (getExpressionType() == ExpressionType.EQUATION || str.length() == 0) {
                 return;
             }
 
@@ -194,21 +202,24 @@ public class MainFragment extends Fragment {
     }
 
     private boolean submitNewExpression(TextView v) {
-        if (mRecyclerViewAdapter.newItem(v.getText(), mToggleInputType.isChecked())) {
-            mRecyclerView.smoothScrollToPosition(mRecyclerViewAdapter.getItemCount() - 1);
+        boolean result = false;
+        String expression = v.getText().toString();
 
-            if (mToggleInputType.isChecked()) {
-                mEquationHistory.add(mIndexFavoriteInEquationHistory[0], v.getText().toString());
-            } else {
-                mAssignmentHistory.add(mIndexFavoriteInAssignmentHistory[0], v.getText().toString());
-            }
-
-            v.setText("");
-            return true;
-        } else {
-            makeToast(R.string.error_illegal_expression);
-            return false;
+        if (getExpressionType() == ExpressionType.EQUATION) {
+            result = mRecyclerViewAdapter.newItem(expression, true);
+            mEquationHistory.add(mIndexFavoriteInEquationHistory[0], expression);
+        } else if (getExpressionType() == ExpressionType.ASSIGNMENT) {
+            result = mRecyclerViewAdapter.newItem(expression, false);
+            mAssignmentHistory.add(mIndexFavoriteInAssignmentHistory[0], expression);
         }
+
+        if (!result) {
+            makeToast(R.string.error_illegal_expression);
+        } else if (expression.equals(v.getText().toString()))  {
+            v.setText("");
+        }
+
+        return result;
     }
 
     public static MainFragment newInstance() {
@@ -224,16 +235,17 @@ public class MainFragment extends Fragment {
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mActionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        mActionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mEditInputNewExpression = (EditText) rootView.findViewById(R.id.editInputNewExpression);
         mToggleInputType = (ToggleButton) rootView.findViewById(R.id.toggleInputType);
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mButtonHistory = (ImageButton) rootView.findViewById(R.id.buttonHistory);
         mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
-;
+        mTextWorkspaceTitle = (TextView) rootView.findViewById(R.id.textWorkspaceTitle);
+
         mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
-        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 40);
+        mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 40);
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mDefaultMinX = mSharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
@@ -247,14 +259,7 @@ public class MainFragment extends Fragment {
                 mSharedPreferences.getStringSet("EQUATION_HISTORY", new HashSet<String>()));
         mIndexFavoriteInEquationHistory[0] = mEquationHistory.size();
 
-
         initTabs();
-
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        int VERTICAL_ITEM_SPACE = 10;
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(VERTICAL_ITEM_SPACE));
 
         mLayoutManager = new LinearLayoutManager(this.getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -277,10 +282,23 @@ public class MainFragment extends Fragment {
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
             @Override
             public void onItemChange() {
-                if (mRecyclerViewAdapter.isReady()) {
+                Set<Character> unassigned = mRecyclerViewAdapter.getUnassignedConstants();
+                if (unassigned == null) {
+                    disableFabs();
+                } else if (unassigned.size() == 0) {
                     enableFabs();
                 } else {
+                    List<Character> list = new ArrayList<>(unassigned);
+                    java.util.Collections.sort(list);
+
+                    if (getExpressionType() != ExpressionType.ASSIGNMENT) {
+                        mToggleInputType.toggle();
+                    }
+
                     disableFabs();
+                    mEditInputNewExpression.setText("");
+                    mEditInputNewExpression.append("" + list.get(0));
+                    showKeypad();
                 }
             }
         });
@@ -360,6 +378,8 @@ public class MainFragment extends Fragment {
                 }
             }
         });
+
+        showKeypad();
     }
 
     private void setupTabContents(View tab) {
@@ -377,7 +397,7 @@ public class MainFragment extends Fragment {
                 public void onClick(View v) {
                     Intent intent = new Intent(getActivity(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
-                    intent.putExtra("THRESHOLD", new double[]{ thresh1.getValue(), thresh2.getValue() });
+                    intent.putExtra("THRESHOLD", new double[]{thresh1.getValue(), thresh2.getValue()});
                     startActivityForResult(intent, 0);
                 }
             });
@@ -389,7 +409,7 @@ public class MainFragment extends Fragment {
                 public void onClick(View v) {
                     Intent intent = new Intent(getActivity(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
-                    intent.putExtra("THRESHOLD", new double[]{ thresh1.getValue() });
+                    intent.putExtra("THRESHOLD", new double[]{thresh1.getValue()});
                     startActivityForResult(intent, 0);
                 }
             });
@@ -435,14 +455,17 @@ public class MainFragment extends Fragment {
     }
 
     private void disableFabs() {
-        for (FloatingActionButton fab: mFabs) {
+        mTabHost.setVisibility(View.GONE);
+        for (FloatingActionButton fab : mFabs) {
             fab.setEnabled(false);
             fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorSilver)));
         }
     }
 
     private void enableFabs() {
-        for (FloatingActionButton fab: mFabs) {
+        mTabHost.setVisibility(View.VISIBLE);
+        hideKeypad();
+        for (FloatingActionButton fab : mFabs) {
             fab.setEnabled(true);
             fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorAccent)));
         }
@@ -462,14 +485,14 @@ public class MainFragment extends Fragment {
         if (!isKeypadOn()) {
             getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
             mExpressionKeypad.setVisibility(View.VISIBLE);
-            mActionBar.hide();
+            // enableCompactUI();
         }
     }
 
     private void hideKeypad() {
         if (isKeypadOn()) {
             mExpressionKeypad.setVisibility(View.GONE);
-            mActionBar.show();
+            // disableCompactUI();
         }
     }
 
@@ -478,25 +501,14 @@ public class MainFragment extends Fragment {
     }
 
     public boolean onBackPressed() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+
         if (mExpressionKeypad.getVisibility() == View.VISIBLE) {  // app keypad is open
             hideKeypad();
-        } else if (!syncIMEState()) {
-            return !tryExit();
-        }
-        return true;
-    }
-
-    private boolean syncIMEState() {
-        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (mActivity.isSoftKeyboardVisible() && imm.isAcceptingText()) {  // OS IME is open, close it
+        } else if (mActivity.isSoftKeyboardVisible() && imm.isAcceptingText()) {
             imm.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
-        } else if (mExpressionKeypad.getVisibility() == View.GONE) {
-            if (!mActionBar.isShowing()) {
-                // App-keyboard state is broken, reset it
-                mActionBar.show();
-            } else {  // no keyboard, try exit
-                return false;
-            }
+        } else {
+            return !tryExit();
         }
         return true;
     }
@@ -523,7 +535,7 @@ public class MainFragment extends Fragment {
         int[] location = new int[2];
         mTabHost.getLocationOnScreen(location);
 
-        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, location[1]);
+        mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(msg);
         mToast.show();
     }
@@ -532,7 +544,7 @@ public class MainFragment extends Fragment {
         int[] location = new int[2];
         mTabHost.getLocationOnScreen(location);
 
-        mToast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, location[1]);
+        mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(res);
         mToast.show();
     }
@@ -540,16 +552,21 @@ public class MainFragment extends Fragment {
     private void popupHistory() {
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.popup_window_list, null);
-        ListView listView = (ListView)view.findViewById(R.id.listHistory);
+        ListView listView = (ListView) view.findViewById(R.id.listHistory);
         final int[] index;
         final ArrayList<String> history;
 
-        if (mToggleInputType.isChecked()) {
+        if (getExpressionType() == ExpressionType.EQUATION) {
             history = mEquationHistory;
             index = mIndexFavoriteInEquationHistory;
         } else {
             history = mAssignmentHistory;
             index = mIndexFavoriteInAssignmentHistory;
+        }
+
+        if (history.size() == 0) {
+            mPopupHistory = null;
+            makeToast(mActivity.getString(R.string.no_history));
         }
 
         final HistoryListAdapter adapter = new HistoryListAdapter(history, index[0], getContext());
@@ -576,7 +593,7 @@ public class MainFragment extends Fragment {
             @Override
             public void onItemClicked(int position) {
                 mEditInputNewExpression.setText("");
-                mEditInputNewExpression.append((String)adapter.getItem(position));
+                mEditInputNewExpression.append((String) adapter.getItem(position));
                 mPopupHistory.dismiss();
             }
         });
@@ -584,20 +601,20 @@ public class MainFragment extends Fragment {
         adapter.setOnItemPinningStateChangedListener(new HistoryListAdapter.OnItemPinningStateChangedListener() {
             @Override
             public void onItemPinningStateChanged(int position, boolean pinned) {
-                String item = (String)adapter.getItem(position);
+                String item = (String) adapter.getItem(position);
                 int realPosition = history.indexOf(item);
 
                 if (realPosition >= 0) {
                     if (pinned && realPosition >= index[0]) {
                         index[0]++;
                         while (realPosition >= index[0]) {
-                            Collections.swap(history, realPosition, realPosition-1);
+                            Collections.swap(history, realPosition, realPosition - 1);
                             realPosition--;
                         }
                     } else if (!pinned && realPosition < index[0]) {
                         index[0]--;
                         while (realPosition < index[0]) {
-                            Collections.swap(history, realPosition, realPosition+1);
+                            Collections.swap(history, realPosition, realPosition + 1);
                             realPosition++;
                         }
                     }
@@ -625,5 +642,14 @@ public class MainFragment extends Fragment {
 
         mPopupHistory.update();
         mPopupHistory.showAsDropDown(mEditInputNewExpression, 0, -10);
+    }
+
+    static class ExpressionType {
+        final static int EQUATION = 0xF0F0;
+        final static int ASSIGNMENT = 0x0F0F;
+    }
+
+    private int getExpressionType() {
+        return mToggleInputType.isChecked() ? ExpressionType.EQUATION : ExpressionType.ASSIGNMENT;
     }
 }
