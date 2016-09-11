@@ -1,28 +1,53 @@
 grammar Expression;
 
-expr
-    : expr op=(MUL|DIV) expr  # BinaryOp
-    | expr op=(ADD|SUB) expr  # BinaryOp
-    | op=(ADD|SUB) factor  # UnaryOp
-    | factor  # ToFactor
-    ;
+expression
+    : binaryOperatorL2;
 
-factor
-    : power factor  # ImplicitMultiply
-    | power  # ToPower
-    ;
+binaryOperatorL2
+    : binaryOperatorL2 op=(ADD|SUB) binaryOperatorL1
+    | binaryOperatorL1;
 
-power
-    : <assoc=right> atom op=(EXP|EXPN) power  # PowerOp
-    | atom # ToAtom
-    ;
+binaryOperatorL1
+    : binaryOperatorL1 op=(MUL|DIV) unaryOperator
+    | unaryOperator;
 
-atom
-    : func=(F_ABS|F_SQRT|F_SIN|F_COS|F_TAN|F_SINH|F_COSH|F_TANH|F_LOG|F_LN|F_EXP) '(' expr ')'  # FunctionCall
-    | '(' expr ')'  # Brackets
-    | ID  # Variable
-    | NUMBER  # Literal
-    ;
+unaryOperator
+    : op=(ADD|SUB) implicitMultiply
+    | implicitMultiply;
+
+implicitMultiply
+    : implicitMultiply implicitMultiplyComponent
+    | number
+    | number implicitMultiplyComponent
+    | implicitMultiplyComponent;
+
+implicitMultiplyComponent
+    : identifier
+    | bracketExpression
+    | functionCall
+    | powerOperator;
+
+powerOperator
+    : <assoc=right> powerComponent op=(EXP|EXPN) powerOperator
+    | <assoc=right> powerComponent op=(EXP|EXPN) powerComponent;
+
+powerComponent
+    : number
+    | identifier
+    | bracketExpression
+    | functionCall;
+
+functionCall
+    : func=(F_ABS|F_SQRT|F_SIN|F_COS|F_TAN|F_SINH|F_COSH|F_TANH|F_LOG|F_LN|F_EXP) bracketExpression;
+
+bracketExpression
+    : '(' expression ')';
+
+number
+    : NUMBER;
+
+identifier
+    : ID;
 
 ADD : '+';
 SUB : '-';
@@ -43,7 +68,7 @@ F_LOG: 'log';
 F_LN: 'ln';
 F_EXP: 'exp';
 
-ID  : [a-zA-Z];
+ID  : [a-z];
 NUMBER
-    : ([0-9]+|[0-9]*'.'[0-9]+)([eE][-+]?[0-9]+)?;
+    : ([0-9]+|[0-9]*'.'[0-9]+)([Ee][-+]?[0-9]+)?;
 WS : [ \t\r\n]+ -> skip ;

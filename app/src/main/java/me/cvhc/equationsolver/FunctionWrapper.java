@@ -8,7 +8,17 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 
+/**
+ * FunctionWrapper wraps an unary math function (MathFunction class) to an
+ * XYSeries object, so the function can be plotted by AndroidPlot library.
+ *
+ * The series is sampled in the interval [lowerBound, upperBound]. To support
+ * dynamic change of plot range, call setBound(l, u) to edit the interval and
+ * re-sample the series.
+ */
 public class FunctionWrapper implements XYSeries {
+
+    // A command pattern interface to wrap an unary math function
     public interface MathFunction {
         double call(double x);
     }
@@ -31,10 +41,18 @@ public class FunctionWrapper implements XYSeries {
         seriesCache.addLast(new Pair<Double, Double>(Double.POSITIVE_INFINITY, null));
     }
 
+    /**
+     * Set the bound of sampling and (re-)sample the series. To save time, old
+     * sampling results will be reused as many as possible. So we don't require
+     * to sample uniformly, but one sample in a uniformly partitioned interval.
+     *
+     * @param l Lower bound of sampling
+     * @param u Upper bound of sampling
+     */
     public void setBound(Double l, Double u) {
         if (l != null) { lowerBound = l; }
         if (u != null) { upperBound = u; }
-        step = (upperBound - lowerBound) / seriesSize;
+        step = Math.max((upperBound - lowerBound) / seriesSize, Math.ulp(0));
 
         ListIterator<Pair<Double,Double>> iter = seriesCache.listIterator();
         Double x = lowerBound;
@@ -69,7 +87,7 @@ public class FunctionWrapper implements XYSeries {
             if (!(Double.isNaN(cur_y) || Double.isInfinite(cur_y))) {
                 if (i > 0) {
                     double pre_y = series[i - 1].second;
-                    if (cur_y == 0 || (cur_y * pre_y < 0.0 && Math.abs(cur_y) < 1.0)) {
+                    if (cur_y == 0 || cur_y * pre_y < 0.0) {
                         nZero++;
                     }
                 }
@@ -120,13 +138,11 @@ public class FunctionWrapper implements XYSeries {
 
     @Override
     public Number getX(int index) {
-        //return lowerBound + step * index;
         return series[index].first;
     }
 
     @Override
     public Number getY(int index) {
-        //return function.call(getX(index).doubleValue());
         Double d = series[index].second;
         if (Double.isNaN(d) || Double.isInfinite(d)) {
             return allInvalid ? 0 : null;
@@ -137,6 +153,6 @@ public class FunctionWrapper implements XYSeries {
 
     @Override
     public String getTitle() {
-        return "What title?";
+        return "";
     }
 }

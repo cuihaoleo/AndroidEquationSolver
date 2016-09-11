@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/fab"
+        android:layout_toLeftOf="@+id/fab"
+        android:id="@+id/relativeLayout2"
+        android:layout_centerVertical="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Lower bound"
+            android:id="@+id/labelThresh1"
+            android:layout_gravity="end"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="6dp"/>
+
+        <me.cvhc.equationsolver.DecimalInputView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/threshold1"
+            android:background="@drawable/border_ui"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:typeface="monospace"
+            android:layout_toRightOf="@+id/labelThresh1"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignBottom="@+id/labelThresh1"
+            android:layout_alignTop="@+id/labelThresh1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Upper bound"
+            android:id="@+id/labelThresh2"
+            android:layout_gravity="end"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_below="@+id/labelThresh1"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@+id/threshold1"
+            android:layout_toStartOf="@+id/threshold1"/>
+
+        <me.cvhc.equationsolver.DecimalInputView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/threshold2"
+            android:background="@drawable/border_ui"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:typeface="monospace"
+            android:layout_toRightOf="@+id/labelThresh2"
+            android:layout_toEndOf="@+id/labelThresh2"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/labelThresh2"
+            android:layout_alignBottom="@+id/labelThresh2"/>
+
+    </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_tick"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:adjustViewBounds="true"
+        app:backgroundTint="@color/colorAccent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="4dp"/>
+
+</RelativeLayout>

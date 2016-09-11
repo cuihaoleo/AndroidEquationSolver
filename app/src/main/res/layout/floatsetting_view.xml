@@ -18,7 +18,9 @@
             android:hint="0.0"
             android:singleLine="true"
             android:maxLength="12"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:gravity="fill_vertical|right"
+            android:textColorHint="#AAA"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -45,7 +47,8 @@
             android:singleLine="true"
             android:layout_marginBottom="12dp"
             android:maxLength="3"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:textColorHint="#AAA"/>
     </LinearLayout>
 
     <TextView

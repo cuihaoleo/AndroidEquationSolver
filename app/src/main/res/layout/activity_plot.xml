@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,78 +7,22 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="me.cvhc.equationsolver.PlotActivity">
+    tools:context="me.cvhc.equationsolver.PlotActivity"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/relativeLayout3"
-        android:layout_toLeftOf="@+id/buttonReset"
-        android:layout_toStartOf="@+id/buttonReset">
+        android:layout_height="wrap_content">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="MinX ="
-            android:id="@+id/textView2"
-            android:textStyle="bold"
-            android:layout_gravity="end"
-            android:layout_alignRight="@+id/textView6"
-            android:layout_alignEnd="@+id/textView6"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:paddingRight="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="1.23456"
-            android:id="@+id/textLowerBound"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Drag/zoom to find an intersection with X-axis."
+            android:id="@+id/textTip"
             android:layout_alignParentTop="true"
-            android:background="@drawable/border_ui"
-            android:layout_alignBottom="@+id/textView2"
-            android:gravity="center_vertical"
-            android:padding="4dp"
-            android:typeface="monospace"
-            android:layout_toRightOf="@+id/textView2"
-            android:layout_toEndOf="@+id/textView2" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="MaxX ="
-            android:id="@+id/textView6"
-            android:layout_below="@+id/textView2"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:textStyle="bold"
-            android:layout_gravity="end"
-            android:paddingRight="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="2.34567"
-            android:id="@+id/textUpperBound"
-            android:layout_below="@+id/textView2"
-            android:layout_toRightOf="@+id/textView2"
-            android:background="@drawable/border_ui"
-            android:layout_alignBottom="@+id/textView6"
-            android:gravity="center_vertical"
-            android:padding="4dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:typeface="monospace" />
-
+            android:layout_alignParentStart="true" />
     </RelativeLayout>
 
     <com.androidplot.xy.XYPlot
@@ -87,16 +31,81 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_above="@+id/relativeLayout2"
-        android:layout_below="@+id/relativeLayout3" />
+        android:layout_marginBottom="10dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/relativeLayout2">
+        android:layout_height="96dp">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="MinX"
+            android:id="@+id/labelMinX"
+            android:textStyle="bold"
+            android:layout_gravity="end"
+            android:paddingRight="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@+id/textUpperBound"
+            android:layout_toStartOf="@+id/textUpperBound"
+            android:gravity="end"
+            android:typeface="monospace"/>
+
+        <me.cvhc.equationsolver.DecimalInputView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/textLowerBound"
+            android:background="@drawable/border_ui"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:typeface="monospace"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/labelMinX"
+            android:layout_alignRight="@+id/textUpperBound"
+            android:layout_alignEnd="@+id/textUpperBound"
+            android:layout_alignTop="@+id/labelMinX"
+            android:layout_alignBottom="@+id/labelMinX" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="MaxX"
+            android:id="@+id/labelMaxX"
+            android:textStyle="bold"
+            android:layout_gravity="end"
+            android:paddingRight="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:layout_below="@+id/labelMinX"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:gravity="end"
+            android:typeface="monospace"/>
+
+        <me.cvhc.equationsolver.DecimalInputView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/textUpperBound"
+            android:background="@drawable/border_ui"
+            android:gravity="center_vertical"
+            android:padding="4dp"
+            android:typeface="monospace"
+            android:layout_below="@+id/textLowerBound"
+            android:layout_toRightOf="@+id/labelMaxX"
+            android:layout_toEndOf="@+id/labelMaxX"
+            android:layout_toLeftOf="@+id/buttonGroup"
+            android:layout_toStartOf="@+id/buttonGroup"
+            android:layout_alignTop="@+id/labelMaxX"
+            android:layout_alignBottom="@+id/labelMaxX" />
 
         <CheckBox
             android:layout_width="wrap_content"
@@ -105,69 +114,39 @@
             android:id="@+id/checkXLogScale"
             android:checked="false"
             android:textSize="12sp"
-            android:layout_below="@+id/textView3"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Y-axis in transformed log scale"
-            android:id="@+id/checkYLogScale"
-            android:checked="false"
-            android:layout_below="@+id/checkXLogScale"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:textSize="12sp" />
+            android:layout_below="@+id/labelMaxX"
+            android:layout_alignParentBottom="true"
+            android:layout_alignRight="@+id/textUpperBound"
+            android:layout_alignEnd="@+id/textUpperBound" />
 
-        <Button
-            style="?android:attr/buttonStyleSmall"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Submit"
-            android:id="@+id/buttonApply"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_alignBottom="@+id/checkYLogScale" />
+            android:id="@+id/buttonGroup"
+            android:layout_marginLeft="10dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Drag/zoom to find an intersection with X-axis."
-            android:id="@+id/textView3"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/buttonApply"
-            android:layout_alignEnd="@+id/buttonApply"
-            android:gravity="center" />
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset"
+                android:id="@+id/buttonReset"
+                android:layout_gravity="right" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Solve"
+                android:id="@+id/buttonApply"
+                android:layout_gravity="right" />
+        </LinearLayout>
+
     </RelativeLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:id="@+id/textLargeWarning"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:gravity="center"
-        android:textColor="@color/colorAqua"
-        android:layout_marginLeft="50dp"
-        android:layout_marginRight="40dp"
-        android:singleLine="false" />
-
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonReset"
-        android:src="@android:drawable/ic_menu_rotate"
-        android:layout_above="@+id/plot"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true" />
-
-</RelativeLayout>
+</LinearLayout>

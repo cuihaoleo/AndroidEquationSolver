@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+          android:keyWidth="12%p"
+          android:keyHeight="6%p"
+          android:horizontalGap="0%p" >
+
+    <Row android:verticalGap="0.8%p"
+         android:keyWidth="10%p"
+         android:rowEdgeFlags="top">
+        <Key android:keyLabel="x" android:keyOutputText="x"
+            android:keyWidth="20%p"
+            android:keyEdgeFlags="left" />
+
+        <Key android:keyLabel="a" android:keyOutputText="a"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="b" android:keyOutputText="b" />
+        <Key android:keyLabel="c" android:keyOutputText="c" />
+        <Key android:keyLabel="d" android:keyOutputText="d" />
+        <Key android:keyLabel="e" android:keyOutputText="e" />
+        <Key android:keyLabel="f" android:keyOutputText="f" />
+
+        <Key android:keyIcon="@drawable/sym_keyboard_switch"
+            android:codes="0"
+            android:horizontalGap="1.8%p"
+            android:keyWidth="16%p"
+            android:keyEdgeFlags="right" />
+    </Row>
+
+    <Row>
+        <Key android:keyLabel="(" android:keyOutputText="("
+            android:keyEdgeFlags="left" />
+        <Key android:keyLabel=")" android:keyOutputText=")" />
+
+        <Key android:keyLabel="7" android:keyOutputText="7"
+            android:keyWidth="16%p"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="8" android:keyOutputText="8"
+            android:keyWidth="16%p" />
+        <Key android:keyLabel="9" android:keyOutputText="9"
+            android:keyWidth="16%p" />
+
+        <Key android:codes="67"
+            android:keyIcon="@android:drawable/ic_input_delete"
+            android:horizontalGap="1.8%p"
+            android:keyWidth="24%p"
+            android:keyEdgeFlags="right" />
+    </Row>
+
+    <Row>
+        <Key android:keyLabel="log" android:keyOutputText="log("
+            android:keyEdgeFlags="left" />
+        <Key android:keyLabel="sqrt" android:keyOutputText="sqrt(" />
+
+        <Key android:keyLabel="4" android:keyOutputText="4"
+            android:keyWidth="16%p"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="5" android:keyOutputText="5"
+            android:keyWidth="16%p" />
+        <Key android:keyLabel="6" android:keyOutputText="6"
+            android:keyWidth="16%p" />
+
+        <Key android:keyLabel="*" android:keyOutputText="*"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="/" android:keyOutputText="/" />
+    </Row>
+
+    <Row>
+        <Key android:keyLabel="eⁿ" android:keyOutputText="exp("
+            android:keyEdgeFlags="left" />
+        <Key android:keyLabel="ln" android:keyOutputText="ln(" />
+
+        <Key android:keyLabel="1" android:keyOutputText="1"
+            android:keyWidth="16%p"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="2" android:keyOutputText="2"
+            android:keyWidth="16%p" />
+        <Key android:keyLabel="3" android:keyOutputText="3"
+            android:keyWidth="16%p" />
+
+        <Key android:keyLabel="+" android:keyOutputText="+"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="-" android:keyOutputText="-" />
+    </Row>
+
+    <Row>
+        <Key android:keyLabel="SPACE"
+            android:keyOutputText=" "
+            android:keyWidth="24%p"
+            android:keyIcon="@drawable/sym_keyboard_space" />
+
+        <Key android:keyLabel="EXP" android:keyOutputText="E"
+            android:keyWidth="16%p"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="0" android:keyOutputText="0"
+            android:keyWidth="16%p" />
+        <Key android:keyLabel="." android:keyOutputText="."
+            android:keyWidth="16%p" />
+
+        <Key android:keyLabel="^" android:keyOutputText="^"
+            android:horizontalGap="1.8%p" />
+        <Key android:keyLabel="OK"
+            android:codes="-1"
+            android:keyEdgeFlags="right" />
+    </Row>
+</Keyboard>

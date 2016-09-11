@@ -1,144 +1,146 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/activity_main"
-    tools:context="me.cvhc.equationsolver.MainActivity">
+    tools:context="me.cvhc.equationsolver.MainFragment"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:layout_width="0px"
-        android:layout_height="0px"
-        android:id="@+id/dummyFocus"
-        android:orientation="horizontal" />
-
-    <LinearLayout
-        android:orientation="horizontal"
+    <RelativeLayout
+        android:id="@+id/layout_main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayoutEquation"
-        android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/listViewVariables"
-        android:layout_alignStart="@+id/listViewVariables">
+        android:layout_height="match_parent"
+        android:layout_above="@+id/keypadMainActivity"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin">
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:id="@+id/imageView"
-            android:background="@android:drawable/ic_menu_help"
-            android:layout_margin="5dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Workspace"
+            android:id="@+id/textWorkspaceTitle"
+            android:layout_marginBottom="4dp"
+            android:textStyle="bold" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/textWorkspaceTitle"
+            android:descendantFocusability="beforeDescendants"
+            android:scrollbars="horizontal"
+            android:layout_above="@+id/editInputNewExpression"
+            android:background="@drawable/border_ui"
+            android:padding="2dp" />
+
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/toggleInputType"
+            android:minHeight="0dp"
+            android:checked="false"
+            android:textOn="F(x) ="
+            android:textOff="Assign"
+            android:typeface="monospace"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/recyclerView"
+            android:layout_above="@+id/frameTabHost"/>
 
         <EditText
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/textEquation"
-            android:inputType="textNoSuggestions"
+            android:layout_height="wrap_content"
+            android:id="@+id/editInputNewExpression"
             android:singleLine="true"
             android:imeOptions="actionDone"
-            android:hint="Enter the equation here"
-            android:background="@android:drawable/edit_text"
-            android:typeface="serif" />
-    </LinearLayout>
+            android:inputType="textNoSuggestions"
+            android:hint="a = 2.0 sqrt(3)"
+            android:layout_toRightOf="@+id/toggleInputType"
+            android:layout_toEndOf="@+id/toggleInputType"
+            android:layout_above="@+id/frameTabHost"
+            android:textColorHint="#AAA"
+            android:layout_toLeftOf="@+id/buttonAdd"
+            android:layout_toStartOf="@+id/buttonAdd"
+            android:paddingRight="24dp" />
 
-    <ListView
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:id="@+id/listViewVariables"
-        android:fadeScrollbars="false"
-        android:choiceMode="singleChoice"
-        android:background="@drawable/border_ui"
-        android:layout_below="@+id/linearLayoutEquation"
-        android:layout_above="@+id/relativeLayout" />
-
-    <RelativeLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/relativeLayout"
-        android:layout_alignParentBottom="true" >
-
-        <TextView
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Range of interest"
-            android:id="@+id/textView2"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginBottom="4dp"
-            android:layout_marginTop="4dp" />
+            android:id="@+id/buttonHistory"
+            android:layout_alignParentRight="false"
+            android:layout_alignParentEnd="false"
+            android:layout_alignTop="@+id/editInputNewExpression"
+            android:src="@android:drawable/arrow_down_float"
+            android:background="@color/colorTransparent"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:layout_alignRight="@+id/editInputNewExpression"
+            android:layout_alignBottom="@+id/editInputNewExpression" />
 
-        <TextView
+        <Button
+            style="@style/Base.Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/labelROILower"
-            android:layout_below="@+id/textView2"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:background="@drawable/border_ui"
-            android:padding="4dp"
-            android:singleLine="true"
-            android:minWidth="80dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="~"
-            android:id="@+id/textView4"
-            android:layout_below="@+id/textView2"
-            android:layout_toRightOf="@+id/labelROILower"
-            android:layout_toEndOf="@+id/labelROILower"
-            android:gravity="center"
+            android:text="+"
+            android:id="@+id/buttonAdd"
+            android:layout_alignBottom="@+id/editInputNewExpression"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:minHeight="0dp"
+            android:minWidth="48dp"
+            android:layout_below="@+id/recyclerView"
+            android:typeface="sans"
             android:textStyle="bold"
-            android:layout_alignBottom="@+id/labelROIUpper" />
+            android:visibility="gone" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <FrameLayout
+            android:id="@+id/frameTabHost"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/labelROIUpper"
-            android:layout_below="@+id/textView2"
-            android:layout_toRightOf="@+id/textView4"
-            android:layout_toEndOf="@+id/textView4"
-            android:background="@drawable/border_ui"
-            android:padding="4dp"
-            android:singleLine="true"
-            android:minWidth="80dp" />
-
-        <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select ROI"
-            android:id="@+id/buttonPlot"
-            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:minHeight="40dp" />
+            android:layout_alignParentEnd="true">
 
-        <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Solve"
-            android:id="@+id/buttonSolve"
-            android:layout_below="@+id/buttonPlot"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignLeft="@+id/buttonPlot"
-            android:layout_alignStart="@+id/buttonPlot"
-            android:minHeight="40dp" />
+            <TabHost
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tabHost"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TabWidget
+                        android:id="@android:id/tabs"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:tabStripEnabled="false"
+                        android:weightSum="3">
+                    </TabWidget>
+
+                    <FrameLayout
+                        android:id="@android:id/tabcontent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/border_ui"
+                        android:padding="8dp">
+                    </FrameLayout>
+                </LinearLayout>
+            </TabHost>
+        </FrameLayout>
+
     </RelativeLayout>
+
+    <me.cvhc.equationsolver.ExpressionKeypad
+        android:id="@+id/keypadMainActivity"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>
