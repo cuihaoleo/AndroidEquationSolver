@@ -1,12 +1,12 @@
 package me.cvhc.equationsolver;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
@@ -26,13 +25,13 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
-import android.util.Log;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -59,14 +58,12 @@ public class MainFragment extends Fragment {
     private final String LOG_TAG = MainFragment.class.getSimpleName();
     private final int HISTORY_SIZE = 10;
 
-    private IMEDetectActivity mActivity;
+    private Activity mActivity;
 
     private ActionBar mActionBar;
     private RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
     private EditText mEditInputNewExpression;
-    private TextView mTextWorkspaceTitle;
     private PopupWindow mPopupHistory;
 
     private ArrayList<String> mAssignmentHistory = new ArrayList<>();
@@ -88,20 +85,14 @@ public class MainFragment extends Fragment {
     private SharedPreferences mSharedPreferences;
     private InputMethodManager mInputMethodManager;
 
-
     private double mDefaultMinX, mDefaultMaxX, mDefaultBingo;
 
     public MainFragment() {
     }
 
     private class CustomTextWatcher implements TextWatcher {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-        }
+        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+        @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
         @Override
         public void afterTextChanged(Editable s) {
@@ -190,18 +181,6 @@ public class MainFragment extends Fragment {
         }
     }
 
-    private class FinishEditListener implements EditText.OnEditorActionListener {
-        @Override
-        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-            if (actionId == EditorInfo.IME_ACTION_DONE ||
-                    event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                return submitNewExpression(v);
-            } else {
-                return false;
-            }
-        }
-    }
-
     private boolean submitNewExpression(TextView v) {
         boolean result = false;
         String expression = v.getText().toString();
@@ -230,12 +209,12 @@ public class MainFragment extends Fragment {
         return fragment;
     }
 
-    @SuppressLint("ShowToast")
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+        // Views
         mActionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         mEditInputNewExpression = (EditText) rootView.findViewById(R.id.editInputNewExpression);
@@ -243,18 +222,18 @@ public class MainFragment extends Fragment {
         mButtonAdd = (Button) rootView.findViewById(R.id.buttonAdd);
         mButtonHistory = (ImageButton) rootView.findViewById(R.id.buttonHistory);
         mTabHost = (TabHost) rootView.findViewById(R.id.tabHost);
-        mTextWorkspaceTitle = (TextView) rootView.findViewById(R.id.textWorkspaceTitle);
+        mExpressionKeypad = (ExpressionKeypad) rootView.findViewById(R.id.keypadMainActivity);
 
-        mToast = Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT);
+        mToast = Toast.makeText(getContext(), "", Toast.LENGTH_SHORT);
         mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 40);
 
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mDefaultMinX = mSharedPreferences.getFloat("pref_default_lower_bound", 0.0F);
         mDefaultMaxX = mSharedPreferences.getFloat("pref_default_upper_bound", 1.0F);
         mDefaultBingo = mSharedPreferences.getFloat("pref_default_bingo", 1.0F);
 
+        // Initialize history, load from shared preferences
         mAssignmentHistory.addAll(
                 mSharedPreferences.getStringSet("ASSIGNMENT_HISTORY", new HashSet<String>()));
         mIndexFavoriteInAssignmentHistory[0] = mAssignmentHistory.size();
@@ -262,47 +241,46 @@ public class MainFragment extends Fragment {
                 mSharedPreferences.getStringSet("EQUATION_HISTORY", new HashSet<String>()));
         mIndexFavoriteInEquationHistory[0] = mEquationHistory.size();
 
+        // Initialize tabs
         initTabs();
 
-        mLayoutManager = new LinearLayoutManager(this.getActivity());
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        mButtonAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                submitNewExpression(mEditInputNewExpression);
-            }
-        });
-
-        mButtonHistory.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popupHistory();
-            }
-        });
+        // Initialize mRecyclerView
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
+        mRecyclerView.setLayoutManager(layoutManager);
 
         mRecyclerViewAdapter = new RecyclerViewAdapter();
         mRecyclerViewAdapter.setOnItemChangeListener(new RecyclerViewAdapter.OnItemChangeListener() {
+            private int lastCount;
+
             @Override
             public void onItemChange() {
                 Set<Character> unassigned = mRecyclerViewAdapter.getUnassignedConstants();
+
                 if (unassigned == null) {
-                    disableFabs();
+                    enableModeTab(false);
                 } else if (unassigned.size() == 0) {
-                    enableFabs();
+                    enableModeTab(true);
                 } else {
                     List<Character> list = new ArrayList<>(unassigned);
                     java.util.Collections.sort(list);
 
-                    if (getExpressionType() != ExpressionType.ASSIGNMENT) {
-                        mToggleInputType.toggle();
-                    }
+                    enableModeTab(false);
 
-                    disableFabs();
-                    mEditInputNewExpression.setText("");
-                    mEditInputNewExpression.append("" + list.get(0));
-                    showKeypad();
+                    if (mRecyclerViewAdapter.getItemCount() > lastCount) {
+                        if (getExpressionType() != ExpressionType.ASSIGNMENT) {
+                            mToggleInputType.toggle();
+                        }
+
+                        mEditInputNewExpression.setText("");
+                        mEditInputNewExpression.append("" + list.get(0));
+
+                        if (getKeyboardState() == KeyboardState.NOTHING) {
+                            setKeyboardState(KeyboardState.CUSTOM);
+                        }
+                    }
                 }
+
+                lastCount = mRecyclerViewAdapter.getItemCount();
             }
         });
 
@@ -310,40 +288,38 @@ public class MainFragment extends Fragment {
         mRecyclerView.addOnItemTouchListener(
                 new SwipeableRecyclerViewTouchListener(mRecyclerView, new SwipeListener()));
 
-        Keyboard keypad = new Keyboard(this.getActivity(), R.xml.keyboard);
-        mExpressionKeypad = (ExpressionKeypad) rootView.findViewById(R.id.keypadMainActivity);
-        mExpressionKeypad.setKeyboard(keypad);
-        mExpressionKeypad.setPreviewEnabled(false);
-
-        mEditInputNewExpression.setOnEditorActionListener(new FinishEditListener());
+        // Initialize mEditInputNewExpression
         mEditInputNewExpression.addTextChangedListener(new CustomTextWatcher());
         mEditInputNewExpression.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
         mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
-        mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from show up
+        mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from showing up
         mEditInputNewExpression.requestFocus();
+        mEditInputNewExpression.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                return (actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && submitNewExpression(v);
+            }
+        });
         mEditInputNewExpression.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!mActivity.isSoftKeyboardVisible() && mExpressionKeypad.getVisibility() == View.GONE) {
-                    showKeypad();
-                }
+                setKeyboardState(KeyboardState.CUSTOM);
             }
         });
 
-        ExpressionKeypadActionListener listener = new ExpressionKeypadActionListener(this.getActivity());
-        listener.addOnChangeModeListener(new ExpressionKeypadActionListener.OnChangeModeListener() {
+        // Initialize custom keyboard
+        Keyboard keypad = new Keyboard(getContext(), R.xml.keyboard);
+        mExpressionKeypad.setKeyboard(keypad);
+        mExpressionKeypad.setPreviewEnabled(false);
+
+        // Initialize buttons
+        mButtonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onChangeMode() {
-                hideKeypad();
-                mEditInputNewExpression.requestFocus();
-
-                mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                mInputMethodManager.showSoftInput(mEditInputNewExpression, InputMethodManager.SHOW_FORCED);
-
+            public void onClick(View v) {
+                submitNewExpression(mEditInputNewExpression);
             }
         });
-        mExpressionKeypad.setOnKeyboardActionListener(listener);
 
         mToggleInputType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -361,27 +337,35 @@ public class MainFragment extends Fragment {
         });
         mToggleInputType.setChecked(true);
 
+        mButtonHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (getKeyboardState() == KeyboardState.NOTHING) {
+                    // Popup keyboard to reserve enough height for history display
+                    setKeyboardState(KeyboardState.CUSTOM);
+                }
+                popupHistory();
+            }
+        });
+
         return rootView;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mActivity = (IMEDetectActivity) getActivity();
-        mActivity.setOnSoftKeyboardVisibilityChangedListener(new IMEDetectActivity.OnSoftKeyboardVisibilityChangedListener() {
+        mActivity = getActivity();
+
+        ExpressionKeypadActionListener listener = new ExpressionKeypadActionListener(mActivity);
+        listener.addOnChangeModeListener(new ExpressionKeypadActionListener.OnChangeModeListener() {
             @Override
-            public void onSoftKeyboardVisibilityChanged(boolean currentState) {
-                Log.d(LOG_TAG, "IME State: " + currentState);
-                if (currentState) {
-                    hideKeypad();
-                    mActionBar.hide();
-                } else {
-                    mActionBar.show();
-                }
+            public void onChangeMode() {
+                setKeyboardState(KeyboardState.SYSTEM);
             }
         });
+        mExpressionKeypad.setOnKeyboardActionListener(listener);
 
-        showKeypad();
+        setKeyboardState(KeyboardState.CUSTOM);
     }
 
     private void setupTabContents(View tab) {
@@ -397,7 +381,7 @@ public class MainFragment extends Fragment {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), PlotActivity.class);
+                    Intent intent = new Intent(getContext(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
                     intent.putExtra("THRESHOLD", new double[]{thresh1.getValue(), thresh2.getValue()});
                     startActivityForResult(intent, 0);
@@ -409,7 +393,7 @@ public class MainFragment extends Fragment {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), PlotActivity.class);
+                    Intent intent = new Intent(getContext(), PlotActivity.class);
                     intent.putExtra("EXPRESSION", mRecyclerViewAdapter.pack());
                     intent.putExtra("THRESHOLD", new double[]{thresh1.getValue()});
                     startActivityForResult(intent, 0);
@@ -422,7 +406,7 @@ public class MainFragment extends Fragment {
         mTabHost.setup();
         FrameLayout contentView = mTabHost.getTabContentView();
 
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         mBisectionSubview = inflater.inflate(R.layout.bisection_setting_view, contentView, false);
         setupTabContents(mBisectionSubview);
         mBingoSubview = inflater.inflate(R.layout.bingo_setting_view, contentView, false);
@@ -437,7 +421,6 @@ public class MainFragment extends Fragment {
                 return mBisectionSubview;
             }
         });
-
         tab2.setContent(new TabHost.TabContentFactory() {
             @Override
             public View createTabContent(String tag) {
@@ -453,23 +436,24 @@ public class MainFragment extends Fragment {
             mTabHost.getTabWidget().getChildAt(i).getLayoutParams().height = 60;
         }
 
-        disableFabs();
+        enableModeTab(false);
     }
 
-    private void disableFabs() {
-        mTabHost.setVisibility(View.GONE);
+    private void enableModeTab(boolean visible) {
+        boolean prevVis = mTabHost.getVisibility() == View.VISIBLE;
+        mTabHost.setVisibility(visible ? View.VISIBLE : View.GONE);
+
         for (FloatingActionButton fab : mFabs) {
-            fab.setEnabled(false);
-            fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorSilver)));
+            fab.setEnabled(visible);
+            fab.setBackgroundTintList(
+                    ColorStateList.valueOf(
+                            ContextCompat.getColor(
+                                    getContext(),
+                                    visible ? R.color.colorAccent : R.color.colorSilver)));
         }
-    }
 
-    private void enableFabs() {
-        mTabHost.setVisibility(View.VISIBLE);
-        hideKeypad();
-        for (FloatingActionButton fab : mFabs) {
-            fab.setEnabled(true);
-            fab.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(getContext(), R.color.colorAccent)));
+        if (prevVis != visible && visible) {
+            setKeyboardState(KeyboardState.NOTHING);
         }
     }
 
@@ -483,40 +467,13 @@ public class MainFragment extends Fragment {
         }
     }
 
-    private void showKeypad() {
-        if (mActivity.isSoftKeyboardVisible()) {
-            View view = mActivity.getCurrentFocus();
-            if (view != null) {
-                mInputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-        }
-
-        if (!isKeypadOn()) {
-            mExpressionKeypad.setVisibility(View.VISIBLE);
-            // enableCompactUI();
-        }
-    }
-
-    private void hideKeypad() {
-        if (isKeypadOn()) {
-            mExpressionKeypad.setVisibility(View.GONE);
-            // disableCompactUI();
-        }
-    }
-
-    private boolean isKeypadOn() {
-        return mExpressionKeypad.getVisibility() == View.VISIBLE;
-    }
-
     public boolean onBackPressed() {
-        if (mExpressionKeypad.getVisibility() == View.VISIBLE) {  // app keypad is open
-            hideKeypad();
-        } else if (mActivity.isSoftKeyboardVisible() && mInputMethodManager.isAcceptingText()) {
-            mInputMethodManager.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
+        if (getKeyboardState() != KeyboardState.NOTHING) {
+            setKeyboardState(KeyboardState.NOTHING);
+            return true;
         } else {
             return !tryExit();
         }
-        return true;
     }
 
     private boolean tryExit() {
@@ -539,7 +496,7 @@ public class MainFragment extends Fragment {
 
     private void makeToast(String msg) {
         int[] location = new int[2];
-        mTabHost.getLocationOnScreen(location);
+        mEditInputNewExpression.getLocationOnScreen(location);
 
         mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, location[1]);
         mToast.setText(msg);
@@ -547,12 +504,7 @@ public class MainFragment extends Fragment {
     }
 
     private void makeToast(int res) {
-        int[] location = new int[2];
-        mTabHost.getLocationOnScreen(location);
-
-        mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, location[1]);
-        mToast.setText(res);
-        mToast.show();
+        makeToast(getResources().getString(res));
     }
 
     private void popupHistory() {
@@ -657,5 +609,61 @@ public class MainFragment extends Fragment {
 
     private int getExpressionType() {
         return mToggleInputType.isChecked() ? ExpressionType.EQUATION : ExpressionType.ASSIGNMENT;
+    }
+
+    static class KeyboardState {
+        final static int NOTHING = 0x0000;
+        final static int CUSTOM = 0x0001;
+        final static int SYSTEM = 0x0010;
+    }
+
+    private int getKeyboardState() {
+        int state = 0;
+
+        if (isSoftKeyboardVisible()) {
+            state |= KeyboardState.SYSTEM;
+        }
+
+        if (mExpressionKeypad.getVisibility() == View.VISIBLE) {
+            state |= KeyboardState.CUSTOM;
+        }
+
+        return state;
+    }
+
+    private void setKeyboardState(int state) {
+        if (state != KeyboardState.NOTHING) {
+            mEditInputNewExpression.requestFocus();
+            mEditInputNewExpression.requestFocusFromTouch();
+        }
+
+        mExpressionKeypad.setVisibility((state & KeyboardState.CUSTOM) == 0 ? View.GONE : View.VISIBLE);
+
+        if ((state & KeyboardState.SYSTEM) == 0) {
+            mInputMethodManager.hideSoftInputFromWindow(mEditInputNewExpression.getWindowToken(), 0);
+        } else {
+            mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            mInputMethodManager.showSoftInput(mEditInputNewExpression, InputMethodManager.SHOW_FORCED);
+        }
+    }
+
+    private static float dpToPx(Context context, float valueInDp) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics);
+    }
+
+    public boolean isSoftKeyboardVisible() {
+        View rootView = mActivity.findViewById(android.R.id.content);
+
+        if (rootView != null) {
+            Rect rect = new Rect();
+            rootView.getWindowVisibleDisplayFrame(rect);
+            int heightDiff = rootView.getRootView().getHeight() - (rect.bottom - rect.top);
+            float thresh = dpToPx(getContext(), 200);
+            // if more than 200 dp, it's probably a keyboard...
+            return heightDiff > thresh;
+        } else {
+            return false;
+        }
     }
 }
