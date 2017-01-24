@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Lower bound"
+            android:text="@string/lower_bound"
             android:id="@+id/labelThresh1"
             android:layout_gravity="end"
             android:paddingRight="8dp"
@@ -29,7 +29,10 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_marginBottom="6dp"/>
+            android:layout_marginBottom="6dp"
+            android:layout_toLeftOf="@+id/threshold1"
+            android:layout_toStartOf="@+id/threshold1"
+            android:textAlignment="textEnd" />
 
         <me.cvhc.equationsolver.DecimalInputView
             android:layout_width="match_parent"
@@ -40,17 +43,18 @@
             android:gravity="center_vertical"
             android:padding="4dp"
             android:typeface="monospace"
-            android:layout_toRightOf="@+id/labelThresh1"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_alignBottom="@+id/labelThresh1"
-            android:layout_alignTop="@+id/labelThresh1"/>
+            android:layout_alignTop="@+id/labelThresh1"
+            android:layout_toRightOf="@+id/labelThresh2"
+            android:layout_toEndOf="@+id/labelThresh2" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Upper bound"
+            android:text="@string/upper_bound"
             android:id="@+id/labelThresh2"
             android:layout_gravity="end"
             android:paddingRight="8dp"
@@ -59,8 +63,7 @@
             android:layout_below="@+id/labelThresh1"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_toLeftOf="@+id/threshold1"
-            android:layout_toStartOf="@+id/threshold1"/>
+            android:textAlignment="textEnd" />
 
         <me.cvhc.equationsolver.DecimalInputView
             android:layout_width="wrap_content"

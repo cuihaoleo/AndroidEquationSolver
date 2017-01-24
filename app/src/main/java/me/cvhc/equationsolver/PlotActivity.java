@@ -123,9 +123,9 @@ public class PlotActivity extends AppCompatActivity implements OnTouchListener {
             public void onClick(View v) {
                 String warning = null;
                 if (nZero == 0) {
-                    warning = "Probably no zero point in select range.";
+                    warning = getString(R.string.warning_no_zero_point);
                 } else if (nZero > 1) {
-                    warning = "It seems there are multiple zero points in select range.";
+                    warning = getString(R.string.warning_multiple_zero_points);
                 }
 
                 if (warning != null) {

@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Drag/zoom to find an intersection with X-axis."
+            android:text="@string/drag_zoom_to_find_an_intersection_with_x_axis"
             android:id="@+id/textTip"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"

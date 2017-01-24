@@ -325,10 +325,10 @@ public class MainFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    makeToast("Input the equation in the text box");
+                    makeToast(getString(R.string.toast_input_equation));
                     mEditInputNewExpression.setHint(R.string.hint_input_equation);
                 } else {
-                    makeToast("Assign an ID in the text box");
+                    makeToast(getString(R.string.toast_assign_id));
                     mEditInputNewExpression.setHint(R.string.hint_input_assignment);
                 }
 
