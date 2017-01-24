@@ -168,6 +168,25 @@ public class ExpressionCalculator {
     private class ExpressionVisitorImpl extends ExpressionBaseVisitor<OptionUnion> {
         private ParseTreeProperty<OptionUnion> NodeProperty = new ParseTreeProperty<>();
 
+        private Double enhancedPow(Double a, Double b) {
+            final double MAX_DIFF_TO_INT = 1e-6;
+            final double MAX_N_IN_NTHROOT = 16;
+
+            if (a >= 0) {
+                return Math.pow(a, b);
+            }
+
+            Double rb = 1.0 / b;
+            Long rbLong = Math.round(rb);
+            if (Math.abs(rbLong) < MAX_N_IN_NTHROOT &&
+                    rbLong % 2 == 1 &&
+                    Math.abs(rb - rbLong) < MAX_DIFF_TO_INT) {
+                return -Math.pow(-a, b);
+            } else {
+                return Math.pow(a, b);
+            }
+        }
+
         private OptionUnion parseBinaryOperator(OptionUnion left, String op, OptionUnion right) {
             OptionUnion current = new OptionUnion();
 
@@ -195,10 +214,10 @@ public class ExpressionCalculator {
                         current.mValue = left.mValue / right.mValue;
                         break;
                     case "^":
-                        current.mValue = Math.pow(left.mValue, right.mValue);
+                        current.mValue = enhancedPow(left.mValue, right.mValue);
                         break;
                     case "^-":
-                        current.mValue = Math.pow(left.mValue, -right.mValue);
+                        current.mValue = enhancedPow(left.mValue, -right.mValue);
                         break;
                     default:
                         throw new RuntimeException();
