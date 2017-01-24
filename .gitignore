@@ -15,6 +15,7 @@
 *.iml
 *.ipr
 *.iws
+/projectFilesBackup
 
 # gradle
 .gradle
