@@ -43,6 +43,7 @@ public class HelpActivity extends AppCompatActivity {
                 new String[]{
                         "Basic Usage",
                         "Expression",
+                        "Other features"
                 }));
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
