@@ -10,6 +10,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -294,6 +295,8 @@ public class MainFragment extends Fragment {
         mEditInputNewExpression.setRawInputType(InputType.TYPE_CLASS_TEXT);
         mEditInputNewExpression.setFilters(new InputFilter[]{new SimpleInputFilter()});
         mEditInputNewExpression.setTextIsSelectable(true);  // this will prevent IME from showing up
+        mEditInputNewExpression.setFocusable(true);
+        mEditInputNewExpression.setFocusableInTouchMode(true);
         mEditInputNewExpression.requestFocus();
         mEditInputNewExpression.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -333,6 +336,7 @@ public class MainFragment extends Fragment {
                 }
 
                 mEditInputNewExpression.setText("");
+                mEditInputNewExpression.requestFocus();
             }
         });
         mToggleInputType.setChecked(true);
@@ -344,7 +348,15 @@ public class MainFragment extends Fragment {
                     // Popup keyboard to reserve enough height for history display
                     setKeyboardState(KeyboardState.CUSTOM);
                 }
-                popupHistory();
+
+                // Ugly workaround to deal with history poping up at wrong place
+                new CountDownTimer(50, 50) {
+                    @Override public void onTick(long millisUntilFinished) { }
+
+                    @Override public void onFinish() {
+                        popupHistory();
+                    }
+                }.start();
             }
         });
 
@@ -366,6 +378,12 @@ public class MainFragment extends Fragment {
         mExpressionKeypad.setOnKeyboardActionListener(listener);
 
         setKeyboardState(KeyboardState.CUSTOM);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mEditInputNewExpression.requestFocus();
     }
 
     private void setupTabContents(View tab) {
