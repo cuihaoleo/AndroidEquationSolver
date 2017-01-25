@@ -37,10 +37,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     {
         private SharedPreferences sharedPreferences;
 
-        @Override
-        public void onCreate(final Bundle savedInstanceState)
-        {
-            super.onCreate(savedInstanceState);
+        private void initPreferences() {
+            setPreferenceScreen(null);
             addPreferencesFromResource(R.xml.preferences);
             getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
 
@@ -56,8 +54,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener(){
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    sharedPreferences.edit().clear().commit();
-                                    initPrefSummary();
+                                    if (sharedPreferences.edit().clear().commit()) {
+                                        initPreferences();
+                                    }
                                 }
                             })
                             .setNegativeButton(android.R.string.cancel, null)
@@ -75,8 +74,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             });
 
-
             initPrefSummary();
+        }
+
+        @Override
+        public void onCreate(final Bundle savedInstanceState)
+        {
+            super.onCreate(savedInstanceState);
+            initPreferences();
         }
 
         @Override
@@ -94,7 +99,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            updatePrefSummary(findPreference(key));
+            Preference pref = findPreference(key);
+            if (pref != null) {
+                updatePrefSummary(pref);
+            }
         }
 
         private void initPrefSummary() {
