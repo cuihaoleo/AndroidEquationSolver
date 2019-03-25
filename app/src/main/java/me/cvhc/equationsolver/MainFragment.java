@@ -116,7 +116,7 @@ public class MainFragment extends Fragment {
             if (str.length() == 1) {
                 mEditInputNewExpression.setText(prefix);
                 mEditInputNewExpression.setSelection(prefix.length());
-            } else if (str.length() > 1) {
+            } else {
                 if (str.length() < prefix.length()) {
                     mEditInputNewExpression.setText("");
                 } else if (!str.startsWith(prefix)) {

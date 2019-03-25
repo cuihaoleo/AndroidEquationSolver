@@ -210,6 +210,12 @@ public class SolveTask extends AsyncTask<FunctionWrapper.MathFunction, Double, D
             textResult.setText(Html.fromHtml("<b>x = </b>" + renderNumber(result, true)));
             textResult.setTag(renderNumber(result, false));
 
+            if (result > 0) {
+                TextView textLogResult = (TextView) view.findViewById(R.id.textLogResult);
+                textLogResult.setText("log(x) = " + renderNumber(Math.log10(result), false));
+                textLogResult.setVisibility(View.VISIBLE);
+            }
+
             TextView textWarning = (TextView) view.findViewById(R.id.textWarning);
             textWarning.setText("y(x) = " + renderNumber(func.call(result), false));
 
